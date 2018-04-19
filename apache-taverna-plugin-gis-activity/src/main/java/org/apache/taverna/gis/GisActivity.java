@@ -1,7 +1,6 @@
 package org.apache.taverna.gis;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -28,7 +27,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
     private final static String MIMETYPE_PORT_POSTFIX = "_mimeType";
     private final static String SCHEMA_PORT_POSTFIX = "_schema";
 
-    private static Logger logger = Logger.getLogger(GisActivity.class);
+    private static final Logger logger = Logger.getLogger(GisActivity.class);
 
     @Override
     public void configure(GisActivityConfigurationBean configBean) throws ActivityConfigurationException {
@@ -81,6 +80,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
         // Execute service asynchronously
         callback.requestRun(new Runnable() {
 
+            @Override
             public void run() {
                 InvocationContext context = callback.getContext();
                 ReferenceService referenceService = context.getReferenceService();

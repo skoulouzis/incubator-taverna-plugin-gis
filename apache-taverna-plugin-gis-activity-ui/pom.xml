@@ -41,8 +41,7 @@
         <dependency>
             <groupId>net.sf.taverna.t2.taverna-workbench</groupId>
             <artifactId>workbench-dev</artifactId>
-            <version>${t2.workbench.version}</version>
-            <scope>test</scope>
+            <version>2.5.0</version>
 
             <exclusions>
 
@@ -128,6 +127,7 @@
                     <artifactId>perspective-myexperiment</artifactId>
                 </exclusion>
             </exclusions>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>
