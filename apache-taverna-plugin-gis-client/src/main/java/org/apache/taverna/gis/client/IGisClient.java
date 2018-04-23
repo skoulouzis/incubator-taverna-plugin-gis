@@ -20,9 +20,8 @@
  */
 package org.apache.taverna.gis.client;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 public interface IGisClient {
@@ -39,9 +38,9 @@ public interface IGisClient {
 	
 	public List<String> getProcessList();
 	
-	public HashMap<String, Integer> getProcessInputPorts(String processID);
+	public Map<String, Integer> getProcessInputPorts(String processID);
 	
-	public HashMap<String, Integer> getProcessOutputPorts(String processID);
+	public Map<String, Integer> getProcessOutputPorts(String processID);
 	
 	public List<IPortDataDescriptor> getTaverna2InputPorts(String processID);
 	
@@ -55,7 +54,7 @@ public interface IGisClient {
 	 * @return Return a map of port names and port values
 	 * @throws Exception
 	 */
-	public HashMap<String, String> executeProcess(String processID, HashMap<String, IPortDataDescriptor> inputs,
-			HashMap<String, IPortDataDescriptor> outputs) throws Exception;
+	public Map<String, String> executeProcess(String processID, Map<String, IPortDataDescriptor> inputs,
+			Map<String, IPortDataDescriptor> outputs) throws Exception;
 	
 }
