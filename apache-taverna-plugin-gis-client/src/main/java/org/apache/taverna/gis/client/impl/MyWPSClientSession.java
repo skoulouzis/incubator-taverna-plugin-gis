@@ -36,6 +36,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,6 +55,7 @@ import net.opengis.wps.x100.ExecuteResponseDocument;
 import net.opengis.wps.x100.ProcessBriefType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionsDocument;
+import net.opengis.wps.x100.impl.ProcessDescriptionTypeImpl;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
@@ -82,11 +84,11 @@ public class MyWPSClientSession {
     private static final String SUPPORTED_VERSION = "1.0.0";
 
     private static MyWPSClientSession session;
-    private final Map<String, CapabilitiesDocument> loggedServices;
+    private final Map<String, CapabilitiesDocument> capabilitiesDocumentCache;
     private XmlOptions options = null;
 
     // a Map of <url, all available process descriptions>
-    private final Map<String, ProcessDescriptionsDocument> processDescriptions;
+    private final Map<String, ProcessDescriptionsDocument> processDescriptionsCache;
     private String securityToken;
     private static final String SECURITY_TOCKEN_NAME = "gcube-token";
 
@@ -98,8 +100,8 @@ public class MyWPSClientSession {
         options = new XmlOptions();
         options.setLoadStripWhitespace();
         options.setLoadTrimTextBuffer();
-        loggedServices = new HashMap<>();
-        processDescriptions = new HashMap<>();
+        capabilitiesDocumentCache = new HashMap<>();
+        processDescriptionsCache = new HashMap<>();
     }
 
     /*
@@ -139,17 +141,17 @@ public class MyWPSClientSession {
             Map<String, String> map = getUrlParameterMap(new URL(url));
             securityToken = map.get(SECURITY_TOCKEN_NAME);
         }
-        if (loggedServices.containsKey(url)) {
+        if (capabilitiesDocumentCache.containsKey(url)) {
             LOGGER.info("Service already registered: " + url);
             return false;
         }
         CapabilitiesDocument capsDoc = retrieveCapsViaGET(url);
         if (capsDoc != null) {
-            loggedServices.put(url, capsDoc);
+            capabilitiesDocumentCache.put(url, capsDoc);
         }
         ProcessDescriptionsDocument processDescs = describeAllProcesses(url);
         if (processDescs != null && capsDoc != null) {
-            processDescriptions.put(url, processDescs);
+            processDescriptionsCache.put(url, processDescs);
             return true;
         }
         LOGGER.warn("retrieving caps failed, caps are null");
@@ -162,20 +164,20 @@ public class MyWPSClientSession {
      * @param url the url of the service that should be disconnected
      */
     public void disconnect(String url) {
-        if (loggedServices.containsKey(url)) {
-            loggedServices.remove(url);
-            processDescriptions.remove(url);
+        if (capabilitiesDocumentCache.containsKey(url)) {
+            capabilitiesDocumentCache.remove(url);
+            processDescriptionsCache.remove(url);
             LOGGER.info("service removed successfully: " + url);
         }
     }
 
     /**
-     * returns the serverIDs of all loggedServices
+     * returns the serverIDs of all capabilitiesDocumentCache
      *
      * @return a list of logged service URLs
      */
     public List<String> getLoggedServices() {
-        return new ArrayList<>(loggedServices.keySet());
+        return new ArrayList<>(capabilitiesDocumentCache.keySet());
     }
 
     /**
@@ -186,7 +188,7 @@ public class MyWPSClientSession {
      * @return success if process descriptions are cached for the WPS server
      */
     public boolean descriptionsAvailableInCache(String serverID) {
-        return processDescriptions.containsKey(serverID);
+        return processDescriptionsCache.containsKey(serverID);
     }
 
     /**
@@ -205,7 +207,7 @@ public class MyWPSClientSession {
                 throw new IOException("Could not initialize WPS " + wpsUrl);
             }
         }
-        return processDescriptions.get(wpsUrl);
+        return processDescriptionsCache.get(wpsUrl);
     }
 
     /**
@@ -244,7 +246,7 @@ public class MyWPSClientSession {
      * @return true if the WPS was already connected
      */
     public boolean serviceAlreadyRegistered(String serverID) {
-        return loggedServices.containsKey(serverID);
+        return capabilitiesDocumentCache.containsKey(serverID);
     }
 
     /**
@@ -254,7 +256,7 @@ public class MyWPSClientSession {
      * @return the <code>CapabilitiesDocument</code> of the WPS
      */
     public CapabilitiesDocument getWPSCaps(String url) {
-        return loggedServices.get(url);
+        return capabilitiesDocumentCache.get(url);
     }
 
     /**
@@ -270,23 +272,31 @@ public class MyWPSClientSession {
      * connect
      */
     public ProcessDescriptionsDocument describeAllProcesses(String url) throws WPSClientException {
-        CapabilitiesDocument doc = loggedServices.get(url);
-        List<ProcessDescriptionsDocument> descriptionsList = new ArrayList<>();
+        CapabilitiesDocument doc = capabilitiesDocumentCache.get(url);
         if (doc == null) {
             LOGGER.warn("serviceCaps are null, perhaps server does not exist");
             return null;
         }
         ProcessBriefType[] processes = doc.getCapabilities().getProcessOfferings().getProcessArray();
-        String[] processIDs = new String[processes.length];
-        for (int i = 0; i < processIDs.length; i++) {
-            processIDs[i] = processes[i].getIdentifier().getStringValue();
-            System.err.println(processIDs[i]);
-//            if (i >= 5) {
-//                return describeProcess(processIDs, url);
-//            }
+        List<String> processIDs = new ArrayList<>();
+        List<ProcessDescriptionType> processDescriptionsList = new ArrayList<>();
+        for (int i = 0; i < processes.length; i++) {
+            processIDs.add(processes[i].getIdentifier().getStringValue());
+            if (i > 0 && (i % 70) == 0) {
+                ProcessDescriptionsDocument.ProcessDescriptions processDescriptionsDoc = describeProcess(processIDs, url).getProcessDescriptions();
+                processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
+                processIDs = new ArrayList<>();
+            }
         }
-        //String[] processIDs = {"all"};
-        return null;//describeProcess(processIDs, url);
+        ProcessDescriptionType[] processDescriptionsArray = new ProcessDescriptionTypeImpl[processDescriptionsList.size()];
+        for (int i = 0; i < processDescriptionsList.size(); i++) {
+            processDescriptionsArray[i] = processDescriptionsList.get(i);
+        }
+
+        ProcessDescriptionsDocument processDescriptionsDocument = ProcessDescriptionsDocument.Factory.newInstance();
+        processDescriptionsDocument.addNewProcessDescriptions().setProcessDescriptionArray(processDescriptionsArray);
+        
+        return processDescriptionsDocument;
     }
 
     /**
@@ -300,8 +310,8 @@ public class MyWPSClientSession {
      * @throws WPSClientException if an exception occurred while trying to
      * connect
      */
-    public ProcessDescriptionsDocument describeProcess(String[] processIDs, String serverID) throws WPSClientException {
-        CapabilitiesDocument caps = this.loggedServices.get(serverID);
+    public ProcessDescriptionsDocument describeProcess(List<String> processIDs, String serverID) throws WPSClientException {
+        CapabilitiesDocument caps = this.capabilitiesDocumentCache.get(serverID);
         Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
         String url = null;
         for (Operation operation : operations) {
@@ -327,7 +337,7 @@ public class MyWPSClientSession {
      * RawData or an Exception Report
      */
     private Object execute(String serverID, ExecuteDocument execute, boolean rawData) throws WPSClientException {
-        CapabilitiesDocument caps = loggedServices.get(serverID);
+        CapabilitiesDocument caps = capabilitiesDocumentCache.get(serverID);
         Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
         String url = null;
         for (Operation operation : operations) {
@@ -379,7 +389,7 @@ public class MyWPSClientSession {
         }
     }
 
-    private ProcessDescriptionsDocument retrieveDescriptionViaGET(String[] processIDs, String url) throws WPSClientException {
+    private ProcessDescriptionsDocument retrieveDescriptionViaGET(List<String> processIDs, String url) throws WPSClientException {
         MyClientDescribeProcessRequest req = new MyClientDescribeProcessRequest();
         req.setIdentifier(processIDs);
         String requestURL = req.getRequest(url);
@@ -394,6 +404,7 @@ public class MyWPSClientSession {
         } catch (IOException e) {
             throw new WPSClientException("Error occured while receiving data", e);
         } catch (XmlException e) {
+            e.printStackTrace();
             throw new WPSClientException("Error occured while parsing ProcessDescription document", e);
         }
     }

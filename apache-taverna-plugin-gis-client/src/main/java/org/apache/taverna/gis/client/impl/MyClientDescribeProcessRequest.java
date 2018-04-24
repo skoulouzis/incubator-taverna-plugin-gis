@@ -29,6 +29,7 @@
 package org.apache.taverna.gis.client.impl;
 
 
+import java.util.List;
 import org.n52.wps.client.AbstractClientGETRequest;
 
 public class MyClientDescribeProcessRequest extends AbstractClientGETRequest {
@@ -41,11 +42,11 @@ public class MyClientDescribeProcessRequest extends AbstractClientGETRequest {
         setRequestParamValue(REQUEST_REQ_PARAM_VALUE);
     }
 
-    public void setIdentifier(String[] ids) {
+    public void setIdentifier(List<String> ids) {
         String idsString = "";
-        for (int i = 0; i < ids.length; i++) {
-            idsString = idsString + ids[i];
-            if (i != ids.length - 1) {
+        for (int i = 0; i < ids.size(); i++) {
+            idsString = idsString + ids.get(i);
+            if (i != ids.size() - 1) {
                 idsString = idsString + ",";
             }
         }
