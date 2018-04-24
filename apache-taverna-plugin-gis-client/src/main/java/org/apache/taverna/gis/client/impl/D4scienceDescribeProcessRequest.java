@@ -28,16 +28,15 @@
  */
 package org.apache.taverna.gis.client.impl;
 
-
 import java.util.List;
 import org.n52.wps.client.AbstractClientGETRequest;
 
-public class MyClientDescribeProcessRequest extends AbstractClientGETRequest {
+public class D4scienceDescribeProcessRequest extends AbstractClientGETRequest {
 
     private static final String IDENTIFIER_REQ_PARAM_NAME = "identifier";
     private static final String REQUEST_REQ_PARAM_VALUE = "DescribeProcess";
 
-    MyClientDescribeProcessRequest() {
+    D4scienceDescribeProcessRequest() {
         super();
         setRequestParamValue(REQUEST_REQ_PARAM_VALUE);
     }

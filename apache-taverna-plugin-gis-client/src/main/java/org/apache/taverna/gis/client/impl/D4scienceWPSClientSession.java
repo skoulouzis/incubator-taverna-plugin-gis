@@ -69,12 +69,6 @@ import org.n52.wps.client.WPSClientException;
 import org.n52.wps.client.ClientCapabiltiesRequest;
 
 /**
- * Contains some convenient methods to access and manage WebProcessingSerivces
- * in a very generic way.
- *
- * This is implemented as a singleton.
- *
- * @author S. Koulouzis
  */
 public class D4scienceWPSClientSession {
     
@@ -389,7 +383,7 @@ public class D4scienceWPSClientSession {
     }
 
     private ProcessDescriptionsDocument retrieveDescriptionViaGET(List<String> processIDs, String url) throws WPSClientException {
-        MyClientDescribeProcessRequest req = new MyClientDescribeProcessRequest();
+        D4scienceDescribeProcessRequest req = new D4scienceDescribeProcessRequest();
         req.setIdentifier(processIDs);
         String requestURL = req.getRequest(url);
         requestURL = addSecurityTocken(requestURL);
