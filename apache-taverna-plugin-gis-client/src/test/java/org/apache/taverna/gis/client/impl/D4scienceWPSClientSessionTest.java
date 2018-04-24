@@ -11,23 +11,23 @@ import java.io.IOException;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class MyWPSClientSessionTest {
+public class D4scienceWPSClientSessionTest {
 
-    private static MyWPSClientSession CLIENT;
+    private static D4scienceWPSClientSession CLIENT;
     private static String TOKEN;
     private static String SERVICE_ENDPOINT;
     private static String URL;
 
-    public MyWPSClientSessionTest() {
+    public D4scienceWPSClientSessionTest() {
     }
 
     @BeforeClass
@@ -40,7 +40,7 @@ public class MyWPSClientSessionTest {
             SERVICE_ENDPOINT += "?";
         }
         URL = SERVICE_ENDPOINT + "gcube-token=" + TOKEN + "&";
-        CLIENT = MyWPSClientSession.getInstance();
+        CLIENT = D4scienceWPSClientSession.getInstance();
     }
 
     @AfterClass
@@ -56,7 +56,7 @@ public class MyWPSClientSessionTest {
     }
 
     /**
-     * Test of connect method, of class MyWPSClientSession.
+     * Test of connect method, of class D4scienceWPSClientSession.
      *
      * @throws java.lang.Exception
      */

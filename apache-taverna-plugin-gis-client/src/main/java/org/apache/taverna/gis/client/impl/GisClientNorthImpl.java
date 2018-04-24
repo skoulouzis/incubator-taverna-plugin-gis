@@ -55,19 +55,18 @@ import net.opengis.wps.x100.ProcessDescriptionType.ProcessOutputs;
 import net.opengis.wps.x100.WPSCapabilitiesType;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteResponseDocument;
-import org.n52.wps.client.WPSClientSession;
 
 public class GisClientNorthImpl implements IGisClient {
 
     private Logger logger = Logger.getLogger(GisClientNorthImpl.class);
 
     private URI serviceURI = null;
-    private final MyWPSClientSession wpsClient;
+    private final D4scienceWPSClientSession wpsClient;
 //    private final WPSClientSession wpsClient;
 
     public GisClientNorthImpl(String serviceURL) throws WPSClientException, MalformedURLException, UnsupportedEncodingException {
         this.serviceURI = URI.create(serviceURL);
-        wpsClient = MyWPSClientSession.getInstance();
+        wpsClient = D4scienceWPSClientSession.getInstance();
 //        wpsClient = WPSClientSession.getInstance();
 
         wpsClient.connect(serviceURI.toString());
@@ -192,7 +191,7 @@ public class GisClientNorthImpl implements IGisClient {
 
     @Override
     public List<IPortDataDescriptor> getTaverna2OutputPorts(String processID) {
-        List<IPortDataDescriptor> outputPorts = new ArrayList<IPortDataDescriptor>();
+        List<IPortDataDescriptor> outputPorts = new ArrayList<>();
 
         ProcessDescriptionType processDescription = null;
 
@@ -236,12 +235,13 @@ public class GisClientNorthImpl implements IGisClient {
     /* (non-Javadoc)
 	 * @see org.apache.taverna.gis.client.IGisClient#executeProcess(java.lang.String, java.util.HashMap, java.util.HashMap)
      */
+    @Override
     public Map<String, String> executeProcess(String processID,
             Map<String, IPortDataDescriptor> inputs, Map<String, IPortDataDescriptor> outputs)
             throws Exception {
 
         // The execution will return a map of port names and port values
-        Map<String, String> executeOutput = null;
+        Map<String, String> executeOutput;
         ProcessDescriptionType processDescription = null;
 
         // Get process description
@@ -282,7 +282,7 @@ public class GisClientNorthImpl implements IGisClient {
     private Map<String, String> getResponseOutput(ProcessDescriptionType processDescription,
             ExecuteDocument execute, Object responseObject) throws Exception {
 
-        Map<String, String> executeOutput = new HashMap<String, String>();
+        Map<String, String> executeOutput = new HashMap<>();
 
         if (responseObject instanceof ExecuteResponseDocument) {
             ExecuteResponseDocument response = (ExecuteResponseDocument) responseObject;
@@ -378,7 +378,7 @@ public class GisClientNorthImpl implements IGisClient {
 
         if (!bboxPort.getSupportedBoundingBoxFormats().contains(selectedFormat)) {
             throw new IllegalArgumentException(
-                    "Unsupported SRS: " + selectedFormat.toString());
+                    "Unsupported SRS: " + selectedFormat);
         }
 
         return selectedFormat;

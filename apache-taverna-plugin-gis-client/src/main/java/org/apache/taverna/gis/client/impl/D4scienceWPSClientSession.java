@@ -45,7 +45,6 @@ import java.util.zip.GZIPInputStream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import net.opengis.ows.x11.DCPDocument;
 
 import net.opengis.ows.x11.ExceptionReportDocument;
 import net.opengis.ows.x11.OperationDocument.Operation;
@@ -75,15 +74,15 @@ import org.n52.wps.client.ClientCapabiltiesRequest;
  *
  * This is implemented as a singleton.
  *
- * @author foerster
+ * @author S. Koulouzis
  */
-public class MyWPSClientSession {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MyWPSClientSession.class);
+public class D4scienceWPSClientSession {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(D4scienceWPSClientSession.class);
     private static final String OGC_OWS_URI = "http://www.opengeospatial.net/ows";
     private static final String SUPPORTED_VERSION = "1.0.0";
 
-    private static MyWPSClientSession session;
+    private static D4scienceWPSClientSession session;
     private final Map<String, CapabilitiesDocument> capabilitiesDocumentCache;
     private XmlOptions options = null;
 
@@ -96,7 +95,7 @@ public class MyWPSClientSession {
      * Initializes a WPS client session.
      *
      */
-    private MyWPSClientSession() {
+    private D4scienceWPSClientSession() {
         options = new XmlOptions();
         options.setLoadStripWhitespace();
         options.setLoadTrimTextBuffer();
@@ -107,20 +106,20 @@ public class MyWPSClientSession {
     /*
      * @result An instance of a WPS Client session.
      */
-    public static MyWPSClientSession getInstance() {
+    public static D4scienceWPSClientSession getInstance() {
         if (session == null) {
-            session = new MyWPSClientSession();
+            session = new D4scienceWPSClientSession();
         }
         return session;
     }
 
     /**
-     * This resets the MyWPSClientSession. This might be necessary, to get rid
-     * of old service entries/descriptions. However, the session has to be
-     * repopulated afterwards.
+     * This resets the D4scienceWPSClientSession. This might be necessary, to
+     * get rid of old service entries/descriptions. However, the session has to
+     * be repopulated afterwards.
      */
     public static void reset() {
-        session = new MyWPSClientSession();
+        session = new D4scienceWPSClientSession();
     }
 
     /**
@@ -295,7 +294,7 @@ public class MyWPSClientSession {
 
         ProcessDescriptionsDocument processDescriptionsDocument = ProcessDescriptionsDocument.Factory.newInstance();
         processDescriptionsDocument.addNewProcessDescriptions().setProcessDescriptionArray(processDescriptionsArray);
-        
+
         return processDescriptionsDocument;
     }
 
