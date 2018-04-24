@@ -8,7 +8,12 @@ package org.apache.taverna.gis.client.impl;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
+import net.opengis.wps.x100.CapabilitiesDocument;
+import net.opengis.wps.x100.ExecuteDocument;
+import net.opengis.wps.x100.ProcessDescriptionType;
+import net.opengis.wps.x100.ProcessDescriptionsDocument;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -67,4 +72,5 @@ public class D4scienceWPSClientSessionTest {
         boolean result = CLIENT.connect(URL);
         assertEquals(expResult, result);
     }
+
 }

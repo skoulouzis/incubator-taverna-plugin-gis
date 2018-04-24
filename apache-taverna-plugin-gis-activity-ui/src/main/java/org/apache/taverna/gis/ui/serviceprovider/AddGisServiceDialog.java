@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import org.apache.taverna.gis.client.GisClientFactory;
 import org.apache.taverna.gis.client.IGisClient;
 
 import net.sf.taverna.t2.workbench.helper.HelpEnabledDialog;
+import org.n52.wps.client.WPSClientException;
 
 @SuppressWarnings("serial")
 public abstract class AddGisServiceDialog extends HelpEnabledDialog {
@@ -151,6 +154,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
         gbc.insets = new Insets(0, 10, 5, 5);
 
         serviceLocationButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent evt) {
 
                 String url = serviceLocationField.getText();
@@ -200,6 +204,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
         JButton selectAll = createUrlButton("Select All");
 
         selectAll.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent evt) {
                 checkAllProcesses(true);
             }
@@ -218,6 +223,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
         JButton deselectAll = createUrlButton("Deselect All");
 
         deselectAll.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent evt) {
                 checkAllProcesses(false);
             }
@@ -263,6 +269,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
         // add service buttons
         final JButton addServiceButton = new JButton("Add");
         addServiceButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent evt) {
                 addPressed();
             }
@@ -270,6 +277,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
         // When user presses "Return" key fire the action on the "Add" button
         addServiceButton.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
                     addPressed();
@@ -279,6 +287,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
         final JButton cancelServiceButton = new JButton("Cancel");
         cancelServiceButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent evt) {
                 closeDialog();
             }
@@ -296,7 +305,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
     private void initProcessesTable() {
         // setup columns
-        Vector<String> columnNames = new Vector<String>();
+        Vector<String> columnNames = new Vector<>();
         columnNames.addElement("");
         columnNames.addElement("Processes");
 
@@ -312,7 +321,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
         };
 
-        sorter = new TableRowSorter<DefaultTableModel>(model);
+        sorter = new TableRowSorter<>(model);
 
         processesTable = new JFilterTable(model);
         processesTable.setRowSorter(sorter);
@@ -350,7 +359,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
             IGisClient gisClient = GisClientFactory.getInstance().getGisClient(serviceURL);
 
             servicesList = gisClient.getProcessList();
-        } catch (Exception ex) {
+        } catch (WPSClientException | MalformedURLException | UnsupportedEncodingException ex) {
             JOptionPane.showMessageDialog(null,
                     "Could not read the service definition from "
                     + serviceLocationField.getText() + ":\n" + ex,
@@ -378,40 +387,40 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
     private void addPressed() {
         final String serviceURL = serviceLocationField.getText().trim();
-//        new Thread("Adding Service " + serviceURL) {
-//            @Override
-//            public void run() {
-//                try {
-//
-//                    URL url = new URL(serviceURL);
-//                    URLConnection connection = url.openConnection();
-//
-//                    try {
-//                        connection.connect(); // if this does not fail - add the service
-//                    } finally {
-//                        try {
-//                            connection.getInputStream().close();
-//                        } catch (IOException ex) {
-//                        }
-//                    }
-//
-//                    addRegistry(serviceURL, getSelectedProcesses());
-//
-//                } catch (Exception ex) { // anything failed
-//                    JOptionPane.showMessageDialog(null,
-//                            "Could not read the service definition from "
-//                            + serviceLocationField.getText() + ":\n" + ex,
-//                            "Could not add service service",
-//                            JOptionPane.ERROR_MESSAGE);
-//
-//                    logger.error(
-//                            "Failed to list GWS processes for service: "
-//                            + serviceLocationField.getText(), ex);
-//                }
-//            }
-//        ;
-//        }.start();
-        addRegistry(serviceURL, getSelectedProcesses());
+        new Thread("Adding Service " + serviceURL) {
+            @Override
+            public void run() {
+                try {
+
+                    URL url = new URL(serviceURL);
+                    URLConnection connection = url.openConnection();
+
+                    try {
+                        connection.connect(); // if this does not fail - add the service
+                    } finally {
+                        try {
+                            connection.getInputStream().close();
+                        } catch (IOException ex) {
+                        }
+                    }
+
+                    addRegistry(serviceURL, getSelectedProcesses());
+
+                } catch (Exception ex) { // anything failed
+                    JOptionPane.showMessageDialog(null,
+                            "Could not read the service definition from "
+                            + serviceLocationField.getText() + ":\n" + ex,
+                            "Could not add service service",
+                            JOptionPane.ERROR_MESSAGE);
+
+                    logger.error(
+                            "Failed to list GWS processes for service: "
+                            + serviceLocationField.getText(), ex);
+                }
+            }
+        ;
+        }.start();
+//        addRegistry(serviceURL, getSelectedProcesses());
         closeDialog();
 
     }
@@ -424,7 +433,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
     }
 
     private List<String> getSelectedProcesses() {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
 
         DefaultTableModel model = (DefaultTableModel) processesTable.getModel();
 
@@ -468,7 +477,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
     }
 
     private void filterProcesses(String criteria, int columnIndex) {
-        RowFilter<DefaultTableModel, Object> rowFilter = null;
+        RowFilter<DefaultTableModel, Object> rowFilter;
 
         try {
             rowFilter = RowFilter.regexFilter("(?i)" + criteria, columnIndex);

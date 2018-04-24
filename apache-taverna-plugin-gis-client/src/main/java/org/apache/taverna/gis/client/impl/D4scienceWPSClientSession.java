@@ -54,6 +54,7 @@ import net.opengis.wps.x100.ExecuteResponseDocument;
 import net.opengis.wps.x100.ProcessBriefType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionsDocument;
+import net.opengis.wps.x100.ResponseFormType;
 import net.opengis.wps.x100.impl.ProcessDescriptionTypeImpl;
 
 import org.apache.xmlbeans.XmlException;
@@ -71,7 +72,7 @@ import org.n52.wps.client.ClientCapabiltiesRequest;
 /**
  */
 public class D4scienceWPSClientSession {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(D4scienceWPSClientSession.class);
     private static final String OGC_OWS_URI = "http://www.opengeospatial.net/ows";
     private static final String SUPPORTED_VERSION = "1.0.0";
@@ -132,7 +133,9 @@ public class D4scienceWPSClientSession {
         LOGGER.info("CONNECT");
         if (securityToken == null) {
             Map<String, String> map = getUrlParameterMap(new URL(url));
-            securityToken = map.get(SECURITY_TOCKEN_NAME);
+            if (map != null) {
+                securityToken = map.get(SECURITY_TOCKEN_NAME);
+            }
         }
         if (capabilitiesDocumentCache.containsKey(url)) {
             LOGGER.info("Service already registered: " + url);
@@ -336,6 +339,7 @@ public class D4scienceWPSClientSession {
         for (Operation operation : operations) {
             if (operation.getName().equals("Execute")) {
                 url = operation.getDCPArray()[0].getHTTP().getPostArray()[0].getHref();
+                break;
             }
         }
         if (url == null) {
@@ -350,16 +354,19 @@ public class D4scienceWPSClientSession {
      *
      * @param serverID url of server not the entry additionally defined in the
      * caps.
-     * @param execute Execute document
+     * @param executeDoc Execute document
      * @return either an ExecuteResponseDocument or an InputStream if asked for
      * RawData or an Exception Report
-     * @throws WPSClientException if an exception occurred during execute
+     * @throws WPSClientException if an exception occurred during executeDoc
      */
-    public Object execute(String serverID, ExecuteDocument execute) throws WPSClientException {
-        if (execute.getExecute().isSetResponseForm() == true && execute.getExecute().isSetResponseForm() == true && execute.getExecute().getResponseForm().isSetRawDataOutput() == true) {
-            return execute(serverID, execute, true);
+    public Object execute(String serverID, ExecuteDocument executeDoc) throws WPSClientException {
+        ExecuteDocument.Execute exe = executeDoc.getExecute();
+        boolean setResponseForm = exe.isSetResponseForm();
+        ResponseFormType responseForm = exe.getResponseForm();
+        if (setResponseForm == true && responseForm.isSetRawDataOutput() == true) {
+            return execute(serverID, executeDoc, true);
         } else {
-            return execute(serverID, execute, false);
+            return execute(serverID, executeDoc, false);
         }
 
     }
@@ -397,13 +404,13 @@ public class D4scienceWPSClientSession {
         } catch (IOException e) {
             throw new WPSClientException("Error occured while receiving data", e);
         } catch (XmlException e) {
-            e.printStackTrace();
             throw new WPSClientException("Error occured while parsing ProcessDescription document", e);
         }
     }
 
     private InputStream retrieveDataViaPOST(XmlObject obj, String urlString) throws WPSClientException {
         try {
+            urlString = addSecurityTocken(urlString);
             URL url = new URL(urlString);
             URLConnection conn = url.openConnection();
             conn.setRequestProperty("Accept-Encoding", "gzip");
@@ -548,14 +555,18 @@ public class D4scienceWPSClientSession {
      * @throws UnsupportedEncodingException
      */
     private Map<String, String> getUrlParameterMap(URL url) throws UnsupportedEncodingException {
-        Map<String, String> query_pairs = new LinkedHashMap<>();
         String query = url.getQuery();
-        String[] pairs = query.split("&");
-        for (String pair : pairs) {
-            int idx = pair.indexOf("=");
-            query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+        if (query != null && query.length() > 1) {
+            Map<String, String> query_pairs = new LinkedHashMap<>();
+
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf("=");
+                query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+            }
+            return query_pairs;
         }
-        return query_pairs;
+        return null;
     }
 
     private String addSecurityTocken(String requestURL) {
