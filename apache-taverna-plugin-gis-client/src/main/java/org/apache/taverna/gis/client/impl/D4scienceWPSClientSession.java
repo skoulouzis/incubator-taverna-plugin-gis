@@ -326,13 +326,13 @@ public class D4scienceWPSClientSession {
      *
      * @param serverID url of server not the entry additionally defined in the
      * caps.
-     * @param execute Execute document
+     * @param executeDoc Execute document
      * @param rawData indicates whether a output should be requested as raw data
      * (works only if just one output is requested)
      * @return either an ExecuteResponseDocument or an InputStream if asked for
      * RawData or an Exception Report
      */
-    private Object execute(String serverID, ExecuteDocument execute, boolean rawData) throws WPSClientException {
+    private Object execute(String serverID, ExecuteDocument executeDoc, boolean rawData) throws WPSClientException {
         CapabilitiesDocument caps = capabilitiesDocumentCache.get(serverID);
         Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
         String url = null;
@@ -345,8 +345,8 @@ public class D4scienceWPSClientSession {
         if (url == null) {
             throw new WPSClientException("Caps does not contain any information about the entry point for process execution");
         }
-        execute.getExecute().setVersion(SUPPORTED_VERSION);
-        return retrieveExecuteResponseViaPOST(url, execute, rawData);
+        executeDoc.getExecute().setVersion(SUPPORTED_VERSION);
+        return retrieveExecuteResponseViaPOST(url, executeDoc, rawData);
     }
 
     /**

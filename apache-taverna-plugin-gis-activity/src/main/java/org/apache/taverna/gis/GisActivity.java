@@ -2,6 +2,7 @@ package org.apache.taverna.gis;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.apache.taverna.gis.client.ComplexDataFormat;
@@ -101,15 +102,14 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
                     Map<String, IPortDataDescriptor> serviceOutputs = prepareOutputs(inputs, context, referenceService);
 
                     // Execute process
-                    Map<String, String> serviceOutput = gisClient.executeProcess(
-                            configBean.getProcessIdentifier().toString(), serviceInputs, serviceOutputs);
+                    Map<String, String> serviceOutput = gisClient.executeProcess(configBean.getProcessIdentifier(), serviceInputs, serviceOutputs);
 
                     // Retrieve output
                     outputs = retrieveResponseOutput(context, referenceService, serviceOutput);
 
                 } catch (Exception e) {
                     logger.error("Error executing service/process: "
-                            + configBean.getOgcServiceUri().toString() + "/" + configBean.getProcessIdentifier().toString(), e);
+                            + configBean.getOgcServiceUri().toString() + "/" + configBean.getProcessIdentifier(), e);
                     callback.fail("Unable to execute service", e);
                 }
 
@@ -224,6 +224,15 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
         if (inputs.containsKey(portName + portPostFix)) {
             value = (String) referenceService.renderIdentifier(
                     inputs.get(portName + portPostFix), String.class, context);
+        } else {
+            Set<String> keys = inputs.keySet();
+            for (String key : keys) {
+                if (key.endsWith(portPostFix)) {
+                    T2Reference tr = inputs.get(key);
+                    value = (String) referenceService.renderIdentifier(tr, String.class, context);
+                    break;
+                }
+            }
         }
 
         return value;
