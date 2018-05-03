@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.apache.taverna.gis.client.BBoxPortDataDescriptor;
@@ -235,49 +236,82 @@ public class GisClientNorthImpl implements IGisClient {
     /* (non-Javadoc)
 	 * @see org.apache.taverna.gis.client.IGisClient#executeProcess(java.lang.String, java.util.HashMap, java.util.HashMap)
      */
+//    @Override
+//    public Map<String, String> executeProcess(String processID,
+//            Map<String, IPortDataDescriptor> inputs, Map<String, IPortDataDescriptor> outputs)
+//            throws Exception {
+//
+//        // The execution will return a map of port names and port values
+//        Map<String, String> executeOutput;
+//        ProcessDescriptionType processDescription = null;
+//
+//        // Get process description
+//        try {
+//            processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
+//        } catch (IOException ex) {
+//            throw new Exception("Failed to get process description for process: " + processID, ex);
+//        }
+//
+//        // Initialise executeDoc builder
+//        ExecuteRequestBuilder executeBuilder = new ExecuteRequestBuilder(processDescription);
+//
+//        // Add inputs to the executeDoc builder
+//        executeBuilder = prepareExecuteBuilderInput(processID, inputs, processDescription, executeBuilder);
+//
+//        // Add outputs to the executeDoc builder 
+////        executeBuilder = prepareExecuteBuilderOutput(outputs, processDescription, executeBuilder);
+//        ExecuteDocument executeDoc = executeBuilder.getExecute();
+//        System.err.println(executeDoc);
+//        logger.info(executeDoc);
+//
+//        executeDoc.getExecute().setService("WPS");
+//
+//        Object responseObject = null;
+//
+//        try {
+//            // Execute service
+//            responseObject = wpsClient.execute(serviceURI.toString(), executeDoc);
+//        } catch (WPSClientException e) {
+//            throw new Exception(e.getServerException().xmlText(), e);
+//        }
+//
+//        // Get outputs
+//        executeOutput = getResponseOutput(processDescription, executeDoc, responseObject);
+//
+//        return executeOutput;
+//    }
     @Override
     public Map<String, String> executeProcess(String processID,
             Map<String, IPortDataDescriptor> inputs, Map<String, IPortDataDescriptor> outputs)
             throws Exception {
-
-        // The execution will return a map of port names and port values
-        Map<String, String> executeOutput;
-        ProcessDescriptionType processDescription = null;
-
-        // Get process description
-        try {
-            processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
-        } catch (IOException ex) {
-            throw new Exception("Failed to get process description for process: " + processID, ex);
-        }
-
-        // Initialise executeDoc builder
+        ProcessDescriptionType processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
         ExecuteRequestBuilder executeBuilder = new ExecuteRequestBuilder(processDescription);
 
-        // Add inputs to the executeDoc builder
-        prepareExecuteBuilderInput(processID, inputs, processDescription, executeBuilder);
+        Map<String, Object> inputs2 = new HashMap<>();
+//        inputs2.put(
+//                "input_file_name",
+//                "http://data.d4science.org/cUx5QkJ3bit6U0prekxKNzI3K25pVWw5Um96M3Qzc2NHbWJQNStIS0N6Yz0");
+//        Set<String> keys = inputs.keySet();
+//        for (String k : keys) {
+//            IPortDataDescriptor val = inputs.get(k);
+//            val.getValue();
+//            inputs2.put(k, val.getValue());
+//        }
+        executeBuilder = prepareExecuteBuilderInput(processID, inputs, processDescription, executeBuilder);
 
-        // Add outputs to the executeDoc builder 
-        prepareExecuteBuilderOutput(outputs, processDescription, executeBuilder);
+//        executeBuilder = prepareExecuteBuilderOutput(outputs, processDescription, executeBuilder);
+//        executeBuilder.setMimeTypeForOutput("text/xml", "non_deterministic_output");
+//        executeBuilder.setSchemaForOutput(
+//                "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd",
+//                "non_deterministic_output");
+        ExecuteDocument execute = executeBuilder.getExecute();
+        System.err.println(execute);
+        execute.getExecute().setService("WPS");
 
-        ExecuteDocument executeDoc = executeBuilder.getExecute();
-        System.err.println(executeDoc);
-        logger.info(executeDoc);
-
-        executeDoc.getExecute().setService("WPS");
-
-        Object responseObject = null;
-
-        try {
-            // Execute service
-            responseObject = wpsClient.execute(serviceURI.toString(), executeDoc);
-        } catch (WPSClientException e) {
-            throw new Exception(e.getServerException().xmlText(), e);
-        }
-
-        // Get outputs
-        executeOutput = getResponseOutput(processDescription, executeDoc, responseObject);
-
+        Object responseObject = wpsClient.execute(serviceURI.toString(), execute);
+        System.err.println(responseObject);
+        System.err.println(responseObject.getClass());
+        Map<String, String> executeOutput = getResponseOutput(processDescription, execute, responseObject);
         return executeOutput;
     }
 
@@ -290,8 +324,7 @@ public class GisClientNorthImpl implements IGisClient {
             ExecuteResponseDocument response = (ExecuteResponseDocument) responseObject;
 
             // analyser is used to get complex data
-            ExecuteResponseAnalyser analyser = new ExecuteResponseAnalyser(execute, response, processDescription);
-
+//            ExecuteResponseAnalyser analyser = new ExecuteResponseAnalyser(execute, response, processDescription);
             for (OutputDataType output : response.getExecuteResponse().getProcessOutputs().getOutputArray()) {
                 DataType data = output.getData();
 
@@ -388,7 +421,7 @@ public class GisClientNorthImpl implements IGisClient {
 
     }
 
-    private void prepareExecuteBuilderInput(String processID, Map<String, IPortDataDescriptor> inputs,
+    private ExecuteRequestBuilder prepareExecuteBuilderInput(String processID, Map<String, IPortDataDescriptor> inputs,
             ProcessDescriptionType processDescription, ExecuteRequestBuilder executeBuilder)
             throws IOException, Exception {
 
@@ -399,7 +432,7 @@ public class GisClientNorthImpl implements IGisClient {
         for (InputDescriptionType input : processInputList) {
             String inputName = input.getIdentifier().getStringValue();
             Object inputValue = inputs.containsKey(inputName) ? inputs.get(inputName).getValue() : null;
-
+//            Object inputValue = inputs.get(inputName);
             // Check if input is required but not provided
             if (inputValue == null && input.getMinOccurs().intValue() > 0) {
                 throw new IOException("Required Input not set: " + inputName);
@@ -416,9 +449,8 @@ public class GisClientNorthImpl implements IGisClient {
 
                     // Check if the selected format (mimeType, encoding, schema)
                     // is supported by the service
-                    ComplexDataFormat selectedFormat = checkComplexDataSupportedFormats(
-                            (ComplexPortDataDescriptor) inputs.get(inputName));
-
+//                    ComplexDataFormat selectedFormat = checkComplexDataSupportedFormats(
+//                            (ComplexPortDataDescriptor) inputs.get(inputName));
                     if (inputValue instanceof String) {
                         // Check if complex data is provided by reference or value
                         boolean isReference = true;
@@ -432,21 +464,25 @@ public class GisClientNorthImpl implements IGisClient {
 
                         if (isReference) {
                             // complex data by reference
-                            executeBuilder.addComplexDataReference(inputName, (String) inputValue,
-                                    selectedFormat.getSchema(), selectedFormat.getEncoding(),
-                                    selectedFormat.getMimeType());
+//                            executeBuilder.addComplexDataReference(inputName, (String) inputValue,
+//                                    selectedFormat.getSchema(), selectedFormat.getEncoding(),
+//                                    selectedFormat.getMimeType());
+                            executeBuilder
+                                    .addComplexDataReference(
+                                            inputName,
+                                            (String) inputValue,
+                                            null,
+                                            null, null);
                         } else {
 
                             // complex data by value
-                            try {
-
-                                executeBuilder.addComplexData(inputName, (String) inputValue,
-                                        selectedFormat.getSchema(), selectedFormat.getEncoding(),
-                                        selectedFormat.getMimeType());
-
-                            } catch (WPSClientException e) {
-                                throw new Exception("Failed to set complex data: " + processID, e);
-                            }
+//                            try {
+//                                executeBuilder.addComplexData(inputName, (String) inputValue,
+//                                        selectedFormat.getSchema(), selectedFormat.getEncoding(),
+//                                        selectedFormat.getMimeType());
+//                            } catch (WPSClientException e) {
+//                                throw new Exception("Failed to set complex data: " + processID, e);
+//                            }
                         }
                     }
                 } else if (input.getBoundingBoxData() != null) {
@@ -454,9 +490,10 @@ public class GisClientNorthImpl implements IGisClient {
                 }
             }
         } // End input loop
+        return executeBuilder;
     }
 
-    private void prepareExecuteBuilderOutput(Map<String, IPortDataDescriptor> outputs,
+    private ExecuteRequestBuilder prepareExecuteBuilderOutput(Map<String, IPortDataDescriptor> outputs,
             ProcessDescriptionType processDescription, ExecuteRequestBuilder executeBuilder)
             throws IOException, Exception {
 
@@ -472,15 +509,26 @@ public class GisClientNorthImpl implements IGisClient {
 
                     if (selectedFormat != null) {
                         // "text/xml" if null
-                        executeBuilder.setMimeTypeForOutput(selectedFormat.getMimeType(), outputName);
+                        String mimeType = selectedFormat.getMimeType();
+                        if (mimeType == null) {
+                            mimeType = "text/xml";
+                        }
+                        executeBuilder.setMimeTypeForOutput(mimeType, outputName);
                         // sample schema "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd"
-                        executeBuilder.setSchemaForOutput(selectedFormat.getSchema(), outputName);
-
-                        executeBuilder.setEncodingForOutput(selectedFormat.getEncoding(), outputName);
+                        String schema = selectedFormat.getSchema();
+                        if (schema == null) {
+                            schema = "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd";
+                        }
+                        executeBuilder.setSchemaForOutput(schema, outputName);
+                        String encding = selectedFormat.getEncoding();
+                        if (encding != null) {
+                            executeBuilder.setEncodingForOutput(encding, outputName);
+                        }
                     }
                 }
             }
         }
+        return executeBuilder;
     }
 
 }
