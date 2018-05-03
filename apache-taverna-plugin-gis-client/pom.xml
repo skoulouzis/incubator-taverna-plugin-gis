@@ -58,5 +58,12 @@
             <version>1.2.12</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.n52.wps</groupId>
+            <artifactId>52n-wps-server</artifactId>
+            <version>3.6.2</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 </project>
