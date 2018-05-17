@@ -26,13 +26,11 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
 	private final static String ENCODING_PORT_POSTFIX = "_encoding";
 	private final static String MIMETYPE_PORT_POSTFIX = "_mimeType";
 	private final static String SCHEMA_PORT_POSTFIX = "_schema";
-	
-
+        
 	private static Logger logger = Logger.getLogger(GisActivity.class);
 	
 	@Override
 	public void configure(GisActivityConfigurationBean configBean) throws ActivityConfigurationException {
-
 		// Any pre-config sanity checks
 		if (configBean.getOgcServiceUri().equals("")) {
 			throw new ActivityConfigurationException("Geospatial web service URI can't be empty");
@@ -105,8 +103,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
 					HashMap<String, IPortDataDescriptor> serviceOutputs = prepareOutputs(inputs, context, referenceService);
 					
 					// Execute process
-					HashMap<String, String> serviceOutput = gisClient.executeProcess(
-							configBean.getProcessIdentifier().toString(), serviceInputs, serviceOutputs);
+					HashMap<String, String> serviceOutput = gisClient.executeProcess(configBean.getProcessIdentifier(), serviceInputs, serviceOutputs);
 					
 					// Retrieve output
 					outputs = retrieveResponseOutput(context, referenceService, serviceOutput);
