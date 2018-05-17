@@ -372,6 +372,7 @@ public class D4scienceWPSClientSession {
         D4scienceClientDescribeProcessRequest req = new D4scienceClientDescribeProcessRequest();
         req.setIdentifier(processIDs);
         String requestURL = req.getRequest(url);
+        LOGGER.debug("Requesting " + processIDs.size() + " descriptions from: " + url);
         try {
             URL urlObj = new URL(requestURL);
             InputStream is = urlObj.openStream();

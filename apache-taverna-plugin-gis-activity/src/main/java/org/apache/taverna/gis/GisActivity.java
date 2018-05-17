@@ -107,7 +107,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
 
                 } catch (Exception e) {
                     LOGGER.error("Error executing service/process: "
-                            + configBean.getOgcServiceUri().toString() + "/" + configBean.getProcessIdentifier().toString(), e);
+                            + configBean.getOgcServiceUri().toString() + "/" + configBean.getProcessIdentifier(), e);
                     callback.fail("Unable to execute service", e);
                 }
 
@@ -124,8 +124,8 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
     private Map<String, T2Reference> retrieveResponseOutput(InvocationContext context,
             ReferenceService referenceService, HashMap<String, String> serviceOutput) {
         Map<String, T2Reference> outputs;
-        outputs = new HashMap<String, T2Reference>();
-        T2Reference simpleRef = null;
+        outputs = new HashMap<>();
+        T2Reference simpleRef;
 
         for (Map.Entry<String, String> entry : serviceOutput.entrySet()) {
             String key = entry.getKey();
@@ -142,7 +142,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
     private HashMap<String, IPortDataDescriptor> prepareOutputs(final Map<String, T2Reference> inputs,
             InvocationContext context, ReferenceService referenceService) {
 
-        HashMap<String, IPortDataDescriptor> serviceOutputs = new HashMap<String, IPortDataDescriptor>();
+        HashMap<String, IPortDataDescriptor> serviceOutputs = new HashMap<>();
 
         for (IPortDataDescriptor activityOutputPort : configBean.getOutputPortDefinitions()) {
             if (activityOutputPort instanceof ComplexPortDataDescriptor) {
@@ -169,7 +169,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
 
     private HashMap<String, IPortDataDescriptor> prepareInputs(final Map<String, T2Reference> inputs,
             InvocationContext context, ReferenceService referenceService) {
-        HashMap<String, IPortDataDescriptor> serviceInputs = new HashMap<String, IPortDataDescriptor>();
+        HashMap<String, IPortDataDescriptor> serviceInputs = new HashMap<>();
 
         for (IPortDataDescriptor activityInputPort : configBean.getInputPortDefinitions()) {
             // Optional inputs are not stored in the map if no value is provided, hence they are skipped  
