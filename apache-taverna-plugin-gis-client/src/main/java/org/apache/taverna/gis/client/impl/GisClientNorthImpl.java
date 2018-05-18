@@ -21,7 +21,9 @@
 package org.apache.taverna.gis.client.impl;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +63,7 @@ public class GisClientNorthImpl implements IGisClient {
     private URI serviceURI = null;
     private D4scienceWPSClientSession wpsClient;
 
-    public GisClientNorthImpl(String serviceURL) {
+    public GisClientNorthImpl(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         this.serviceURI = URI.create(serviceURL);
         wpsClient = D4scienceWPSClientSession.getInstance();
 
@@ -348,7 +350,6 @@ public class GisClientNorthImpl implements IGisClient {
         // Check if the selected format (mimeType, encoding, schema)
         // is supported by the service
         ComplexDataFormat selectedFormat = complexPort.getComplexFormat();
-
         // TODO: Check if contains should not be case sensitive
         if (!complexPort.getSupportedComplexFormats().contains(selectedFormat)) {
             logger.warn("Provided format not supported.");

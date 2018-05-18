@@ -1,9 +1,11 @@
 package org.apache.taverna.gis.ui.serviceprovider;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
@@ -43,11 +45,11 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
 
         List<GisServiceDesc> results = new ArrayList<>();
 
-        IGisClient gisServiceClient = GisClientFactory.getInstance().getGisClient(getConfiguration().getOgcServiceUri().toASCIIString());
-
-        List<String> processIdentifiers = serviceProviderConfig.getProcessIdentifiers();
-
+        IGisClient gisServiceClient;
         try {
+            gisServiceClient = GisClientFactory.getInstance().getGisClient(getConfiguration().getOgcServiceUri().toASCIIString());
+
+            List<String> processIdentifiers = serviceProviderConfig.getProcessIdentifiers();
 
             for (String processID : processIdentifiers) {
                 GisServiceDesc service = new GisServiceDesc();
@@ -76,7 +78,7 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
                 callBack.partialResults(results);
             }
 
-        } catch (Exception ex) {
+        } catch (UnsupportedEncodingException | MalformedURLException ex) {
             JOptionPane.showMessageDialog(null,
                     "Could not read the service definition from "
                     + serviceURI + ":\n" + ex,
@@ -155,7 +157,6 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
 //        return myDefaultConfigs;
 //
 //    }
-
     @Override
     public void createCustomizedConfigurePanel(
             final net.sf.taverna.t2.servicedescriptions.CustomizedConfigurePanelProvider.CustomizedConfigureCallBack<GisServiceProviderConfig> callBack) {

@@ -18,12 +18,15 @@ package org.apache.taverna.gis.client.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -71,6 +74,8 @@ public class D4scienceWPSClientSession {
     private XmlOptions options = null;
     private boolean useConnectURL = false;
     private String connectURL;
+    private String securityToken;
+    private static final String SECURITY_TOCKEN_NAME = "gcube-token";
 
     // a Map of <url, all available process descriptions>
     private final Map<String, ProcessDescriptionsDocument> processDescriptionsCache;
@@ -114,8 +119,10 @@ public class D4scienceWPSClientSession {
      * further identification of the service.
      * @return true, if connect succeeded, false else.
      * @throws WPSClientException
+     * @throws java.io.UnsupportedEncodingException
+     * @throws java.net.MalformedURLException
      */
-    public boolean connect(String url) throws WPSClientException {
+    public boolean connect(String url) throws WPSClientException, UnsupportedEncodingException, MalformedURLException {
         return connect(url, false);
     }
 
@@ -129,11 +136,20 @@ public class D4scienceWPSClientSession {
      * the WPS and not the URLs from the Operations Metadata
      * @return true, if connect succeeded, false else.
      * @throws WPSClientException
+     * @throws java.io.UnsupportedEncodingException
+     * @throws java.net.MalformedURLException
      */
-    public boolean connect(String url, boolean useConnectURL) throws WPSClientException {
+    public boolean connect(String url, boolean useConnectURL) throws WPSClientException, UnsupportedEncodingException, MalformedURLException {
         LOGGER.info("Connecting to: " + url);
         this.useConnectURL = useConnectURL;
         this.connectURL = url;
+        if (securityToken == null) {
+            Map<String, String> map = getUrlParameterMap(new URL(url));
+            if (map != null) {
+                securityToken = map.get(SECURITY_TOCKEN_NAME);
+            }
+        }
+
         if (useConnectURL) {
             LOGGER.info("Use connect URL for further communication: " + connectURL);
         }
@@ -148,7 +164,7 @@ public class D4scienceWPSClientSession {
         }
         ProcessDescriptionsDocument processDescs = describeAllProcesses(url);
         if (processDescs != null && capsDoc != null) {
-            LOGGER.debug("Got process description document: " + processDescs);
+            LOGGER.debug("Got process description document");
             processDescriptionsCache.put(url, processDescs);
             return true;
         }
@@ -359,6 +375,7 @@ public class D4scienceWPSClientSession {
     private CapabilitiesDocument retrieveCapsViaGET(String url) throws WPSClientException {
         ClientCapabiltiesRequest req = new ClientCapabiltiesRequest();
         url = req.getRequest(url);
+        url = addSecurityTocken(url);
         try {
             URL urlObj = new URL(url);
             urlObj.getContent();
@@ -378,6 +395,7 @@ public class D4scienceWPSClientSession {
         D4scienceClientDescribeProcessRequest req = new D4scienceClientDescribeProcessRequest();
         req.setIdentifier(processIDs);
         String requestURL = req.getRequest(url);
+        requestURL = addSecurityTocken(requestURL);
         LOGGER.debug("GET: " + requestURL);
         try {
             URL urlObj = new URL(requestURL);
@@ -395,8 +413,11 @@ public class D4scienceWPSClientSession {
 
     private InputStream retrieveDataViaPOST(XmlObject obj, String urlString) throws WPSClientException {
         try {
+            urlString = addSecurityTocken(urlString);
             URL url = new URL(urlString);
             URLConnection conn = url.openConnection();
+            LOGGER.debug("POST: " + urlString + " " + obj.toString());
+
             conn.setRequestProperty("Accept-Encoding", "gzip");
             conn.setRequestProperty("Content-Type", "text/xml");
             conn.setDoOutput(true);
@@ -502,6 +523,7 @@ public class D4scienceWPSClientSession {
     public Object executeViaGET(String url, String executeAsGETString) throws WPSClientException {
         url = url + executeAsGETString;
         try {
+            url = addSecurityTocken(url);
             URL urlObj = new URL(url);
             InputStream is = urlObj.openStream();
 
@@ -534,7 +556,7 @@ public class D4scienceWPSClientSession {
         List<ProcessDescriptionType> processDescriptionsList = new ArrayList<>();
         for (int i = 0; i < processes.length; i++) {
             processIDs.add(processes[i].getIdentifier().getStringValue());
-            if (i > 0 && (i % 70) == 0) {
+            if (i > 0 && (i % 20) == 0) {
                 ProcessDescriptionsDocument.ProcessDescriptions processDescriptionsDoc = describeProcess(processIDs, url).getProcessDescriptions();
                 processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
                 processIDs = new ArrayList<>();
@@ -555,4 +577,37 @@ public class D4scienceWPSClientSession {
         return processDescriptionsDocument;
     }
 
+    /**
+     * Code from
+     * https://stackoverflow.com/questions/13592236/parse-a-uri-string-into-name-value-collection
+     *
+     * @param url
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    private Map<String, String> getUrlParameterMap(URL url) throws UnsupportedEncodingException {
+        String query = url.getQuery();
+        if (query != null && query.length() > 1) {
+            Map<String, String> query_pairs = new LinkedHashMap<>();
+
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf("=");
+                query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+            }
+            return query_pairs;
+        }
+        return null;
+    }
+
+    private String addSecurityTocken(String requestURL) {
+        if (securityToken != null && !requestURL.contains(SECURITY_TOCKEN_NAME)) {
+            if (requestURL.endsWith("&")) {
+                requestURL += SECURITY_TOCKEN_NAME + "=" + securityToken + "&";
+            } else {
+                requestURL += "&" + SECURITY_TOCKEN_NAME + "=" + securityToken + "&";
+            }
+        }
+        return requestURL;
+    }
 }

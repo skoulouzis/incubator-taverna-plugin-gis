@@ -1,5 +1,7 @@
 package org.apache.taverna.gis.client;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import org.apache.taverna.gis.client.impl.GisClientNorthImpl;
 
 public class GisClientFactory {
@@ -19,7 +21,7 @@ public class GisClientFactory {
 
     }
 
-    public IGisClient getGisClient(String serviceURL) {
+    public IGisClient getGisClient(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         return new GisClientNorthImpl(serviceURL);
     }
 
