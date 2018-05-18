@@ -73,7 +73,7 @@ public class D4scienceWPSClientSession {
     private String connectURL;
 
     // a Map of <url, all available process descriptions>
-    private final Map<String, ProcessDescriptionsDocument> processDescriptions;
+    private final Map<String, ProcessDescriptionsDocument> processDescriptionsCache;
 
     /**
      * Initializes a WPS client session.
@@ -84,7 +84,7 @@ public class D4scienceWPSClientSession {
         options.setLoadStripWhitespace();
         options.setLoadTrimTextBuffer();
         loggedServices = new HashMap<>();
-        processDescriptions = new HashMap<>();
+        processDescriptionsCache = new HashMap<>();
     }
 
     /*
@@ -143,11 +143,13 @@ public class D4scienceWPSClientSession {
         }
         CapabilitiesDocument capsDoc = retrieveCapsViaGET(url);
         if (capsDoc != null) {
+            LOGGER.debug("Got capabilities document");
             loggedServices.put(url, capsDoc);
         }
         ProcessDescriptionsDocument processDescs = describeAllProcesses(url);
         if (processDescs != null && capsDoc != null) {
-            processDescriptions.put(url, processDescs);
+            LOGGER.debug("Got process description document: " + processDescs);
+            processDescriptionsCache.put(url, processDescs);
             return true;
         }
         LOGGER.warn("retrieving caps failed, caps are null");
@@ -162,7 +164,7 @@ public class D4scienceWPSClientSession {
     public void disconnect(String url) {
         if (loggedServices.containsKey(url)) {
             loggedServices.remove(url);
-            processDescriptions.remove(url);
+            processDescriptionsCache.remove(url);
             LOGGER.info("service removed successfully: " + url);
         }
     }
@@ -184,7 +186,7 @@ public class D4scienceWPSClientSession {
      * @return success
      */
     public boolean descriptionsAvailableInCache(String serverID) {
-        return processDescriptions.containsKey(serverID);
+        return processDescriptionsCache.containsKey(serverID);
     }
 
     /**
@@ -202,7 +204,7 @@ public class D4scienceWPSClientSession {
                 throw new IOException("Could not initialize WPS " + wpsUrl);
             }
         }
-        return processDescriptions.get(wpsUrl);
+        return processDescriptionsCache.get(wpsUrl);
     }
 
     /**
@@ -214,7 +216,9 @@ public class D4scienceWPSClientSession {
      * @throws IOException
      */
     public ProcessDescriptionType getProcessDescription(String serverID, String processID) throws IOException {
-        ProcessDescriptionType[] processes = getProcessDescriptionsFromCache(serverID).getProcessDescriptions().getProcessDescriptionArray();
+        ProcessDescriptionsDocument processDescriptionsDoc = getProcessDescriptionsFromCache(serverID);
+        ProcessDescriptionsDocument.ProcessDescriptions processDescriptions = processDescriptionsDoc.getProcessDescriptions();
+        ProcessDescriptionType[] processes = processDescriptions.getProcessDescriptionArray();
         for (ProcessDescriptionType process : processes) {
             if (process.getIdentifier().getStringValue().equals(processID)) {
                 return process;
@@ -296,6 +300,7 @@ public class D4scienceWPSClientSession {
             for (Operation operation : operations) {
                 if (operation.getName().equals("DescribeProcess")) {
                     url = operation.getDCPArray()[0].getHTTP().getGetArray()[0].getHref();
+                    break;
                 }
             }
             if (url == null) {
@@ -321,6 +326,7 @@ public class D4scienceWPSClientSession {
             for (Operation operation : operations) {
                 if (operation.getName().equals("Execute")) {
                     url = operation.getDCPArray()[0].getHTTP().getPostArray()[0].getHref();
+                    break;
                 }
             }
             if (url == null) {
@@ -372,7 +378,7 @@ public class D4scienceWPSClientSession {
         D4scienceClientDescribeProcessRequest req = new D4scienceClientDescribeProcessRequest();
         req.setIdentifier(processIDs);
         String requestURL = req.getRequest(url);
-        LOGGER.debug("Requesting " + processIDs.size() + " descriptions from: " + url);
+        LOGGER.debug("GET: " + requestURL);
         try {
             URL urlObj = new URL(requestURL);
             InputStream is = urlObj.openStream();
@@ -533,6 +539,10 @@ public class D4scienceWPSClientSession {
                 processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
                 processIDs = new ArrayList<>();
             }
+        }
+        if (processDescriptionsList.size() < processes.length) {
+            ProcessDescriptionsDocument.ProcessDescriptions processDescriptionsDoc = describeProcess(processIDs, url).getProcessDescriptions();
+            processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
         }
         ProcessDescriptionType[] processDescriptionsArray = new ProcessDescriptionTypeImpl[processDescriptionsList.size()];
         for (int i = 0; i < processDescriptionsList.size(); i++) {

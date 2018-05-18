@@ -74,7 +74,6 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
                 // partialResults() can also be called several times from inside
                 // for-loop if the full search takes a long time
                 callBack.partialResults(results);
-
             }
 
         } catch (Exception ex) {
@@ -111,12 +110,12 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
      */
     @Override
     public String getName() {
-        return "Geospatial Web Services";
+        return "OGC Web Processing Service";
     }
 
     @Override
     public String toString() {
-        return "Geospatial Web Services " + getConfiguration().getOgcServiceUri();
+        return "OGC Web Processing Service " + getConfiguration().getOgcServiceUri();
     }
 
     /**
@@ -145,17 +144,17 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
 
     }
 
-    @Override
-    public List<GisServiceProviderConfig> getDefaultConfigurations() {
-
-        List<GisServiceProviderConfig> myDefaultConfigs = new ArrayList<>();
-        
-        myDefaultConfigs.add(new GisServiceProviderConfig("http://dataminer-prototypes.d4science.org/wps/WebProcessingService?",
-                Arrays.asList("dataminer-prototypes.d4science.org")));
-
-        return myDefaultConfigs;
-
-    }
+//    @Override
+//    public List<GisServiceProviderConfig> getDefaultConfigurations() {
+//
+//        List<GisServiceProviderConfig> myDefaultConfigs = new ArrayList<>();
+//
+//        myDefaultConfigs.add(new GisServiceProviderConfig("http://dataminer-prototypes.d4science.org/wps/WebProcessingService?",
+//                Arrays.asList("dataminer-prototypes.d4science.org")));
+//
+//        return myDefaultConfigs;
+//
+//    }
 
     @Override
     public void createCustomizedConfigurePanel(
