@@ -39,7 +39,6 @@ import org.apache.taverna.gis.client.PortDataDescriptorFactory;
 import org.n52.wps.client.ExecuteRequestBuilder;
 import org.n52.wps.client.ExecuteResponseAnalyser;
 import org.n52.wps.client.WPSClientException;
-//import org.n52.wps.client.WPSClientSession;
 
 import net.opengis.ows.x11.LanguageStringType;
 import net.opengis.ows.x11.impl.ExceptionReportDocumentImpl;
@@ -55,13 +54,15 @@ import net.opengis.wps.x100.ProcessDescriptionType.ProcessOutputs;
 import net.opengis.wps.x100.WPSCapabilitiesType;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteResponseDocument;
+//import org.n52.wps.client.WPSClientSession;
 
 public class GisClientNorthImpl implements IGisClient {
 
-    private Logger logger = Logger.getLogger(GisClientNorthImpl.class);
+    private final Logger logger = Logger.getLogger(GisClientNorthImpl.class);
 
     private URI serviceURI = null;
-    private D4scienceWPSClientSession wpsClient;
+    private final D4scienceWPSClientSession wpsClient;
+//    private WPSClientSession wpsClient;
 
     public GisClientNorthImpl(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         this.serviceURI = URI.create(serviceURL);

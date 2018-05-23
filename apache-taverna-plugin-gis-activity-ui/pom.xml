@@ -29,7 +29,8 @@
         <dependency>
             <groupId>net.sf.taverna.t2.ui-api</groupId>
             <artifactId>contextual-views-api</artifactId>
-            <version>${t2.ui.api.version}</version>
+            <version>1.5</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>net.sf.taverna.t2.ui-impl</groupId>
@@ -42,7 +43,7 @@
             <groupId>net.sf.taverna.t2.taverna-workbench</groupId>
             <artifactId>workbench-dev</artifactId>
             <version>${t2.workbench.version}</version>
-            <!--<scope>test</scope>-->
+            <scope>test</scope>
 
             <exclusions>
 
