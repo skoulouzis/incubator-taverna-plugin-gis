@@ -56,6 +56,7 @@ import net.opengis.wps.x100.ProcessDescriptionType.ProcessOutputs;
 import net.opengis.wps.x100.WPSCapabilitiesType;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteResponseDocument;
+//import org.n52.wps.client.WPSClientSession;
 
 public class GisClientNorthImpl implements IGisClient {
 
@@ -63,14 +64,17 @@ public class GisClientNorthImpl implements IGisClient {
 
     private URI serviceURI = null;
     private final D4scienceWPSClientSession wpsClient;
-//    private final WPSClientSession wpsClient;
+//    private WPSClientSession wpsClient;
 
-    public GisClientNorthImpl(String serviceURL) throws WPSClientException, MalformedURLException, UnsupportedEncodingException {
+    public GisClientNorthImpl(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         this.serviceURI = URI.create(serviceURL);
         wpsClient = D4scienceWPSClientSession.getInstance();
-//        wpsClient = WPSClientSession.getInstance();
 
-        wpsClient.connect(serviceURI.toString());
+        try {
+            wpsClient.connect(serviceURI.toString());
+        } catch (WPSClientException ex) {
+            logger.error("Failed to connect to service: " + serviceURI, ex);
+        }
 
     }
 
@@ -90,8 +94,8 @@ public class GisClientNorthImpl implements IGisClient {
     }
 
     @Override
-    public Map<String, Integer> getProcessInputPorts(String processID) {
-        Map<String, Integer> inputPorts = new HashMap<>();
+    public HashMap<String, Integer> getProcessInputPorts(String processID) {
+        HashMap<String, Integer> inputPorts = new HashMap<>();
 
         ProcessDescriptionType processDescription = null;
 
@@ -128,8 +132,8 @@ public class GisClientNorthImpl implements IGisClient {
     }
 
     @Override
-    public Map<String, Integer> getProcessOutputPorts(String processID) {
-        Map<String, Integer> outputPorts = new HashMap<>();
+    public HashMap<String, Integer> getProcessOutputPorts(String processID) {
+        HashMap<String, Integer> outputPorts = new HashMap<>();
 
         ProcessDescriptionType processDescription = null;
 
@@ -236,82 +240,47 @@ public class GisClientNorthImpl implements IGisClient {
     /* (non-Javadoc)
 	 * @see org.apache.taverna.gis.client.IGisClient#executeProcess(java.lang.String, java.util.HashMap, java.util.HashMap)
      */
-//    @Override
-//    public Map<String, String> executeProcess(String processID,
-//            Map<String, IPortDataDescriptor> inputs, Map<String, IPortDataDescriptor> outputs)
-//            throws Exception {
-//
-//        // The execution will return a map of port names and port values
-//        Map<String, String> executeOutput;
-//        ProcessDescriptionType processDescription = null;
-//
-//        // Get process description
-//        try {
-//            processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
-//        } catch (IOException ex) {
-//            throw new Exception("Failed to get process description for process: " + processID, ex);
-//        }
-//
-//        // Initialise executeDoc builder
-//        ExecuteRequestBuilder executeBuilder = new ExecuteRequestBuilder(processDescription);
-//
-//        // Add inputs to the executeDoc builder
-//        executeBuilder = prepareExecuteBuilderInput(processID, inputs, processDescription, executeBuilder);
-//
-//        // Add outputs to the executeDoc builder 
-////        executeBuilder = prepareExecuteBuilderOutput(outputs, processDescription, executeBuilder);
-//        ExecuteDocument executeDoc = executeBuilder.getExecute();
-//        System.err.println(executeDoc);
-//        logger.info(executeDoc);
-//
-//        executeDoc.getExecute().setService("WPS");
-//
-//        Object responseObject = null;
-//
-//        try {
-//            // Execute service
-//            responseObject = wpsClient.execute(serviceURI.toString(), executeDoc);
-//        } catch (WPSClientException e) {
-//            throw new Exception(e.getServerException().xmlText(), e);
-//        }
-//
-//        // Get outputs
-//        executeOutput = getResponseOutput(processDescription, executeDoc, responseObject);
-//
-//        return executeOutput;
-//    }
     @Override
     public Map<String, String> executeProcess(String processID,
             Map<String, IPortDataDescriptor> inputs, Map<String, IPortDataDescriptor> outputs)
             throws Exception {
-        ProcessDescriptionType processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
+
+        // The execution will return a map of port names and port values
+        Map<String, String> executeOutput;
+        ProcessDescriptionType processDescription = null;
+
+        // Get process description
+        try {
+            processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
+        } catch (IOException ex) {
+            throw new Exception("Failed to get process description for process: " + processID, ex);
+        }
+
+        // Initialise execute builder
         ExecuteRequestBuilder executeBuilder = new ExecuteRequestBuilder(processDescription);
 
-        Map<String, Object> inputs2 = new HashMap<>();
-//        inputs2.put(
-//                "input_file_name",
-//                "http://data.d4science.org/cUx5QkJ3bit6U0prekxKNzI3K25pVWw5Um96M3Qzc2NHbWJQNStIS0N6Yz0");
-//        Set<String> keys = inputs.keySet();
-//        for (String k : keys) {
-//            IPortDataDescriptor val = inputs.get(k);
-//            val.getValue();
-//            inputs2.put(k, val.getValue());
-//        }
-        executeBuilder = prepareExecuteBuilderInput(processID, inputs, processDescription, executeBuilder);
+        // Add inputs to the execute builder
+        prepareExecuteBuilderInput(processID, inputs, processDescription, executeBuilder);
 
-//        executeBuilder = prepareExecuteBuilderOutput(outputs, processDescription, executeBuilder);
-//        executeBuilder.setMimeTypeForOutput("text/xml", "non_deterministic_output");
-//        executeBuilder.setSchemaForOutput(
-//                "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd",
-//                "non_deterministic_output");
+        // Add outputs to the execute builder 
+        prepareExecuteBuilderOutput(processID, outputs, processDescription, executeBuilder);
+
         ExecuteDocument execute = executeBuilder.getExecute();
-        System.err.println(execute);
+
         execute.getExecute().setService("WPS");
 
-        Object responseObject = wpsClient.execute(serviceURI.toString(), execute);
-        System.err.println(responseObject);
-        System.err.println(responseObject.getClass());
-        Map<String, String> executeOutput = getResponseOutput(processDescription, execute, responseObject);
+        Object responseObject = null;
+
+        try {
+            // Execute service
+            responseObject = wpsClient.execute(serviceURI.toString(), execute);
+        } catch (WPSClientException e) {
+            throw new Exception(e.getServerException().xmlText(), e);
+        }
+
+        // Get outputs
+        executeOutput = getResponseOutput(processDescription, execute, responseObject);
+
         return executeOutput;
     }
 
@@ -324,7 +293,8 @@ public class GisClientNorthImpl implements IGisClient {
             ExecuteResponseDocument response = (ExecuteResponseDocument) responseObject;
 
             // analyser is used to get complex data
-//            ExecuteResponseAnalyser analyser = new ExecuteResponseAnalyser(execute, response, processDescription);
+            ExecuteResponseAnalyser analyser = new ExecuteResponseAnalyser(execute, response, processDescription);
+
             for (OutputDataType output : response.getExecuteResponse().getProcessOutputs().getOutputArray()) {
                 DataType data = output.getData();
 
@@ -383,26 +353,24 @@ public class GisClientNorthImpl implements IGisClient {
         // Check if the selected format (mimeType, encoding, schema)
         // is supported by the service
         ComplexDataFormat selectedFormat = complexPort.getComplexFormat();
-//        List<ComplexDataFormat> supportedComplexFormats = complexPort.getSupportedComplexFormats();
         // TODO: Check if contains should not be case sensitive
-        //This is always return false.
-//        if (!supportedComplexFormats.contains(selectedFormat)) {
-//            logger.warn("Provided format not supported.");
-//
-//            // TODO: Should throw exception or set to default?
-//            ComplexDataFormat defaultFormat = complexPort.getDefaultComplexFormat();
-//            if (defaultFormat == null) {
-////				throw new IllegalArgumentException(
-////						"Unsupported format: MimeType=" + selectedFormat.getMimeType() + " Schema=" 
-////								+ selectedFormat.getSchema() + " Encoding=" + selectedFormat.getEncoding());
-//
-//                defaultFormat = new ComplexDataFormat(null, null, null);
-//                
-//            }
-//            
-//            selectedFormat = defaultFormat;
-//            
-//        }
+        if (!complexPort.getSupportedComplexFormats().contains(selectedFormat)) {
+            logger.warn("Provided format not supported.");
+
+            // TODO: Should throw exception or set to default?
+            ComplexDataFormat defaultFormat = complexPort.getDefaultComplexFormat();
+            if (defaultFormat == null) {
+//				throw new IllegalArgumentException(
+//						"Unsupported format: MimeType=" + selectedFormat.getMimeType() + " Schema=" 
+//								+ selectedFormat.getSchema() + " Encoding=" + selectedFormat.getEncoding());
+
+                defaultFormat = new ComplexDataFormat(null, null, null);
+
+            }
+
+            selectedFormat = defaultFormat;
+
+        }
 
         return selectedFormat;
 
@@ -421,7 +389,7 @@ public class GisClientNorthImpl implements IGisClient {
 
     }
 
-    private ExecuteRequestBuilder prepareExecuteBuilderInput(String processID, Map<String, IPortDataDescriptor> inputs,
+    private void prepareExecuteBuilderInput(String processID, Map<String, IPortDataDescriptor> inputs,
             ProcessDescriptionType processDescription, ExecuteRequestBuilder executeBuilder)
             throws IOException, Exception {
 
@@ -432,7 +400,7 @@ public class GisClientNorthImpl implements IGisClient {
         for (InputDescriptionType input : processInputList) {
             String inputName = input.getIdentifier().getStringValue();
             Object inputValue = inputs.containsKey(inputName) ? inputs.get(inputName).getValue() : null;
-//            Object inputValue = inputs.get(inputName);
+
             // Check if input is required but not provided
             if (inputValue == null && input.getMinOccurs().intValue() > 0) {
                 throw new IOException("Required Input not set: " + inputName);
@@ -449,8 +417,9 @@ public class GisClientNorthImpl implements IGisClient {
 
                     // Check if the selected format (mimeType, encoding, schema)
                     // is supported by the service
-//                    ComplexDataFormat selectedFormat = checkComplexDataSupportedFormats(
-//                            (ComplexPortDataDescriptor) inputs.get(inputName));
+                    ComplexDataFormat selectedFormat = checkComplexDataSupportedFormats(
+                            (ComplexPortDataDescriptor) inputs.get(inputName));
+
                     if (inputValue instanceof String) {
                         // Check if complex data is provided by reference or value
                         boolean isReference = true;
@@ -464,25 +433,21 @@ public class GisClientNorthImpl implements IGisClient {
 
                         if (isReference) {
                             // complex data by reference
-//                            executeBuilder.addComplexDataReference(inputName, (String) inputValue,
-//                                    selectedFormat.getSchema(), selectedFormat.getEncoding(),
-//                                    selectedFormat.getMimeType());
-                            executeBuilder
-                                    .addComplexDataReference(
-                                            inputName,
-                                            (String) inputValue,
-                                            null,
-                                            null, null);
+                            executeBuilder.addComplexDataReference(inputName, (String) inputValue,
+                                    selectedFormat.getSchema(), selectedFormat.getEncoding(),
+                                    selectedFormat.getMimeType());
                         } else {
 
                             // complex data by value
-//                            try {
-//                                executeBuilder.addComplexData(inputName, (String) inputValue,
-//                                        selectedFormat.getSchema(), selectedFormat.getEncoding(),
-//                                        selectedFormat.getMimeType());
-//                            } catch (WPSClientException e) {
-//                                throw new Exception("Failed to set complex data: " + processID, e);
-//                            }
+                            try {
+
+                                executeBuilder.addComplexData(inputName, (String) inputValue,
+                                        selectedFormat.getSchema(), selectedFormat.getEncoding(),
+                                        selectedFormat.getMimeType());
+
+                            } catch (WPSClientException e) {
+                                throw new Exception("Failed to set complex data: " + processID, e);
+                            }
                         }
                     }
                 } else if (input.getBoundingBoxData() != null) {
@@ -490,10 +455,9 @@ public class GisClientNorthImpl implements IGisClient {
                 }
             }
         } // End input loop
-        return executeBuilder;
     }
 
-    private ExecuteRequestBuilder prepareExecuteBuilderOutput(Map<String, IPortDataDescriptor> outputs,
+    private void prepareExecuteBuilderOutput(String processID, Map<String, IPortDataDescriptor> outputs,
             ProcessDescriptionType processDescription, ExecuteRequestBuilder executeBuilder)
             throws IOException, Exception {
 
@@ -509,26 +473,15 @@ public class GisClientNorthImpl implements IGisClient {
 
                     if (selectedFormat != null) {
                         // "text/xml" if null
-                        String mimeType = selectedFormat.getMimeType();
-                        if (mimeType == null) {
-                            mimeType = "text/xml";
-                        }
-                        executeBuilder.setMimeTypeForOutput(mimeType, outputName);
+                        executeBuilder.setMimeTypeForOutput(selectedFormat.getMimeType(), outputName);
                         // sample schema "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd"
-                        String schema = selectedFormat.getSchema();
-                        if (schema == null) {
-                            schema = "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd";
-                        }
-                        executeBuilder.setSchemaForOutput(schema, outputName);
-                        String encding = selectedFormat.getEncoding();
-                        if (encding != null) {
-                            executeBuilder.setEncodingForOutput(encding, outputName);
-                        }
+                        executeBuilder.setSchemaForOutput(selectedFormat.getSchema(), outputName);
+
+                        executeBuilder.setEncodingForOutput(selectedFormat.getEncoding(), outputName);
                     }
                 }
             }
         }
-        return executeBuilder;
     }
 
 }

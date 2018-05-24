@@ -1,33 +1,21 @@
-package org.apache.taverna.gis.client.impl;
-
-/*
- * Copyright (C) 2007-2017 52°North Initiative for Geospatial Open Source
+/**
+ * ﻿Copyright (C) 2007 - 2016 52°North Initiative for Geospatial Open Source
  * Software GmbH
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 as published
- * by the Free Software Foundation.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * If the program is linked with libraries which are licensed under one of
- * the following licenses, the combination of the program with the linked
- * library is not considered a "derivative work" of the program:
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *       • Apache License, version 2.0
- *       • Apache Software License, version 1.0
- *       • GNU Lesser General Public License, version 3
- *       • Mozilla Public License, versions 1.0, 1.1 and 2.0
- *       • Common Development and Distribution License (CDDL), version 1.0
- *
- * Therefore the distribution of the program linked with libraries licensed
- * under the aforementioned licenses, is permitted by the copyright holders
- * if the distribution is compliant with both the GNU General Public
- * License version 2 and the aforementioned licenses.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
- * Public License for more details.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+package org.apache.taverna.gis.client.impl;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -45,7 +33,6 @@ import java.util.zip.GZIPInputStream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import net.opengis.ows.x11.ExceptionReportDocument;
 import net.opengis.ows.x11.OperationDocument.Operation;
 import net.opengis.wps.x100.CapabilitiesDocument;
@@ -54,7 +41,6 @@ import net.opengis.wps.x100.ExecuteResponseDocument;
 import net.opengis.wps.x100.ProcessBriefType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionsDocument;
-import net.opengis.wps.x100.ResponseFormType;
 import net.opengis.wps.x100.impl.ProcessDescriptionTypeImpl;
 
 import org.apache.xmlbeans.XmlException;
@@ -66,25 +52,33 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-import org.n52.wps.client.WPSClientException;
 import org.n52.wps.client.ClientCapabiltiesRequest;
+import org.n52.wps.client.WPSClientException;
 
 /**
+ * Contains some convenient methods to access and manage WebProcessingSerivces
+ * in a very generic way.
+ *
+ * This is implemented as a singleton.
+ *
+ * @author foerster
  */
 public class D4scienceWPSClientSession {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(D4scienceWPSClientSession.class);
     private static final String OGC_OWS_URI = "http://www.opengeospatial.net/ows";
     private static final String SUPPORTED_VERSION = "1.0.0";
-
+    
     private static D4scienceWPSClientSession session;
-    private final Map<String, CapabilitiesDocument> capabilitiesDocumentCache;
+    private final Map<String, CapabilitiesDocument> loggedServices;
     private XmlOptions options = null;
+    private boolean useConnectURL = false;
+    private String connectURL;
+    private String securityToken;
+    private static final String SECURITY_TOCKEN_NAME = "gcube-token";
 
     // a Map of <url, all available process descriptions>
     private final Map<String, ProcessDescriptionsDocument> processDescriptionsCache;
-    private String securityToken;
-    private static final String SECURITY_TOCKEN_NAME = "gcube-token";
 
     /**
      * Initializes a WPS client session.
@@ -94,12 +88,12 @@ public class D4scienceWPSClientSession {
         options = new XmlOptions();
         options.setLoadStripWhitespace();
         options.setLoadTrimTextBuffer();
-        capabilitiesDocumentCache = new HashMap<>();
+        loggedServices = new HashMap<>();
         processDescriptionsCache = new HashMap<>();
     }
 
     /*
-     * @result An instance of a WPS Client session.
+	 * @result An instance of a WPS Client session.
      */
     public static D4scienceWPSClientSession getInstance() {
         if (session == null) {
@@ -124,29 +118,53 @@ public class D4scienceWPSClientSession {
      * @param url the entry point for the service. This is used as id for
      * further identification of the service.
      * @return true, if connect succeeded, false else.
-     * @throws WPSClientException if an exception occurred while trying to
-     * connect
+     * @throws WPSClientException
      * @throws java.io.UnsupportedEncodingException
      * @throws java.net.MalformedURLException
      */
     public boolean connect(String url) throws WPSClientException, UnsupportedEncodingException, MalformedURLException {
-        LOGGER.info("CONNECT");
+        return connect(url, false);
+    }
+
+    /**
+     * Connects to a WPS and retrieves Capabilities plus puts all available
+     * Descriptions into cache.
+     *
+     * @param url the entry point for the service. This is used as id for
+     * further identification of the service.
+     * @param useConnectURL use the URL that was passed for communication with
+     * the WPS and not the URLs from the Operations Metadata
+     * @return true, if connect succeeded, false else.
+     * @throws WPSClientException
+     * @throws java.io.UnsupportedEncodingException
+     * @throws java.net.MalformedURLException
+     */
+    public boolean connect(String url, boolean useConnectURL) throws WPSClientException, UnsupportedEncodingException, MalformedURLException {
+        LOGGER.info("Connecting to: " + url);
+        this.useConnectURL = useConnectURL;
+        this.connectURL = url;
         if (securityToken == null) {
             Map<String, String> map = getUrlParameterMap(new URL(url));
             if (map != null) {
                 securityToken = map.get(SECURITY_TOCKEN_NAME);
             }
         }
-        if (capabilitiesDocumentCache.containsKey(url)) {
+        
+        if (useConnectURL) {
+            LOGGER.info("Use connect URL for further communication: " + connectURL);
+        }
+        if (loggedServices.containsKey(url)) {
             LOGGER.info("Service already registered: " + url);
             return false;
         }
         CapabilitiesDocument capsDoc = retrieveCapsViaGET(url);
         if (capsDoc != null) {
-            capabilitiesDocumentCache.put(url, capsDoc);
+            LOGGER.debug("Got capabilities document");
+            loggedServices.put(url, capsDoc);
         }
         ProcessDescriptionsDocument processDescs = describeAllProcesses(url);
         if (processDescs != null && capsDoc != null) {
+            LOGGER.debug("Got process description document");
             processDescriptionsCache.put(url, processDescs);
             return true;
         }
@@ -157,31 +175,31 @@ public class D4scienceWPSClientSession {
     /**
      * removes a service from the session
      *
-     * @param url the url of the service that should be disconnected
+     * @param url
      */
     public void disconnect(String url) {
-        if (capabilitiesDocumentCache.containsKey(url)) {
-            capabilitiesDocumentCache.remove(url);
+        if (loggedServices.containsKey(url)) {
+            loggedServices.remove(url);
             processDescriptionsCache.remove(url);
             LOGGER.info("service removed successfully: " + url);
         }
     }
 
     /**
-     * returns the serverIDs of all capabilitiesDocumentCache
+     * returns the serverIDs of all loggedServices
      *
-     * @return a list of logged service URLs
+     * @return
      */
     public List<String> getLoggedServices() {
-        return new ArrayList<>(capabilitiesDocumentCache.keySet());
+        return new ArrayList<>(loggedServices.keySet());
     }
 
     /**
      * informs you if the descriptions for the specified service is already in
      * the session. in normal case it should return true :)
      *
-     * @param serverID the URL of the WPS server
-     * @return success if process descriptions are cached for the WPS server
+     * @param serverID
+     * @return success
      */
     public boolean descriptionsAvailableInCache(String serverID) {
         return processDescriptionsCache.containsKey(serverID);
@@ -190,10 +208,9 @@ public class D4scienceWPSClientSession {
     /**
      * returns the cached processdescriptions of a service.
      *
-     * @param serverID the URL of the WPS server
-     * @return success if process descriptions are cached for the WPS server
-     * @throws IOException if an exception occurred while trying to connect to
-     * the WPS
+     * @param serverID
+     * @return success
+     * @throws IOException
      */
     private ProcessDescriptionsDocument getProcessDescriptionsFromCache(String wpsUrl) throws IOException {
         if (!descriptionsAvailableInCache(wpsUrl)) {
@@ -209,13 +226,15 @@ public class D4scienceWPSClientSession {
     /**
      * return the processDescription for a specific process from Cache.
      *
-     * @param serverID the URL of the WPS server
-     * @param processID the id of the process
+     * @param serverID
+     * @param processID
      * @return a ProcessDescription for a specific process from Cache.
-     * @throws IOException if an exception occurred while trying to connect
+     * @throws IOException
      */
     public ProcessDescriptionType getProcessDescription(String serverID, String processID) throws IOException {
-        ProcessDescriptionType[] processes = getProcessDescriptionsFromCache(serverID).getProcessDescriptions().getProcessDescriptionArray();
+        ProcessDescriptionsDocument processDescriptionsDoc = getProcessDescriptionsFromCache(serverID);
+        ProcessDescriptionsDocument.ProcessDescriptions processDescriptions = processDescriptionsDoc.getProcessDescriptions();
+        ProcessDescriptionType[] processes = processDescriptions.getProcessDescriptionArray();
         for (ProcessDescriptionType process : processes) {
             if (process.getIdentifier().getStringValue().equals(processID)) {
                 return process;
@@ -229,7 +248,7 @@ public class D4scienceWPSClientSession {
      *
      * @param wpsUrl the URL of the WPS
      * @return An Array of ProcessDescriptions
-     * @throws IOException if an exception occurred while trying to connect
+     * @throws IOException
      */
     public ProcessDescriptionType[] getAllProcessDescriptions(String wpsUrl) throws IOException {
         return getProcessDescriptionsFromCache(wpsUrl).getProcessDescriptions().getProcessDescriptionArray();
@@ -238,21 +257,21 @@ public class D4scienceWPSClientSession {
     /**
      * looks up, if the service exists already in session.
      *
-     * @param serverID the URL of the WPS
-     * @return true if the WPS was already connected
+     * @param serverID
+     * @return
      */
     public boolean serviceAlreadyRegistered(String serverID) {
-        return capabilitiesDocumentCache.containsKey(serverID);
+        return loggedServices.containsKey(serverID);
     }
 
     /**
      * provides you the cached capabilities for a specified service.
      *
-     * @param url the URL of the WPS
-     * @return the <code>CapabilitiesDocument</code> of the WPS
+     * @param url
+     * @return
      */
     public CapabilitiesDocument getWPSCaps(String url) {
-        return capabilitiesDocumentCache.get(url);
+        return loggedServices.get(url);
     }
 
     /**
@@ -261,38 +280,22 @@ public class D4scienceWPSClientSession {
      * cached capabilities will be used. Please keep that in mind. the retrieved
      * descriptions will not be cached, so only transient information!
      *
-     * @param url the URL of the WPS
-     * @return a process descriptions document containing all process
-     * descriptions of this WPS
-     * @throws WPSClientException if an exception occurred while trying to
-     * connect
+     * @param url
+     * @return
+     * @throws WPSClientException
      */
     public ProcessDescriptionsDocument describeAllProcesses(String url) throws WPSClientException {
-        CapabilitiesDocument doc = capabilitiesDocumentCache.get(url);
+        CapabilitiesDocument doc = loggedServices.get(url);
         if (doc == null) {
             LOGGER.warn("serviceCaps are null, perhaps server does not exist");
             return null;
         }
-        ProcessBriefType[] processes = doc.getCapabilities().getProcessOfferings().getProcessArray();
-        List<String> processIDs = new ArrayList<>();
-        List<ProcessDescriptionType> processDescriptionsList = new ArrayList<>();
-        for (int i = 0; i < processes.length; i++) {
-            processIDs.add(processes[i].getIdentifier().getStringValue());
-            if (i > 0 && (i % 70) == 0) {
-                ProcessDescriptionsDocument.ProcessDescriptions processDescriptionsDoc = describeProcess(processIDs, url).getProcessDescriptions();
-                processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
-                processIDs = new ArrayList<>();
-            }
-        }
-        ProcessDescriptionType[] processDescriptionsArray = new ProcessDescriptionTypeImpl[processDescriptionsList.size()];
-        for (int i = 0; i < processDescriptionsList.size(); i++) {
-            processDescriptionsArray[i] = processDescriptionsList.get(i);
-        }
-
-        ProcessDescriptionsDocument processDescriptionsDocument = ProcessDescriptionsDocument.Factory.newInstance();
-        processDescriptionsDocument.addNewProcessDescriptions().setProcessDescriptionArray(processDescriptionsArray);
-
-        return processDescriptionsDocument;
+        //Sending http://dataminer4-proto.d4science.org/wps/WebProcessingService?identifier=all&Request=DescribeProcess&Service=WPS&version=1.0.0&
+        //Throws an exeption:org.n52.wps.server.ExceptionReport: Algorithm does not exist: SPATIAL_DISTRIBUTION_OF_CORRELATION...
+//        String[] processIDs = new String[]{"all"};
+//        return describeProcess(processIDs, url);
+        return getProcessDescriptionInBatches(url, doc);
+        
     }
 
     /**
@@ -300,23 +303,25 @@ public class D4scienceWPSClientSession {
      * information will not be held in cache!
      *
      * @param processIDs one or more processIDs
-     * @param serverID the URL of the WPS
-     * @return a process descriptions document containing the process
-     * descriptions for the ids
-     * @throws WPSClientException if an exception occurred while trying to
-     * connect
+     * @param serverID
+     * @return
+     * @throws WPSClientException
      */
     public ProcessDescriptionsDocument describeProcess(List<String> processIDs, String serverID) throws WPSClientException {
-        CapabilitiesDocument caps = this.capabilitiesDocumentCache.get(serverID);
-        Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
-        String url = null;
-        for (Operation operation : operations) {
-            if (operation.getName().equals("DescribeProcess")) {
-                url = operation.getDCPArray()[0].getHTTP().getGetArray()[0].getHref();
+        String url = connectURL;
+        if (!useConnectURL) {
+            CapabilitiesDocument caps = this.loggedServices.get(serverID);
+            Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
+            
+            for (Operation operation : operations) {
+                if (operation.getName().equals("DescribeProcess")) {
+                    url = operation.getDCPArray()[0].getHTTP().getGetArray()[0].getHref();
+                    break;
+                }
             }
-        }
-        if (url == null) {
-            throw new WPSClientException("Missing DescribeOperation in Capabilities");
+            if (url == null) {
+                throw new WPSClientException("Capabilities do not contain any information about the entry point for DescribeProcess operation.");
+            }
         }
         return retrieveDescriptionViaGET(processIDs, url);
     }
@@ -324,56 +329,54 @@ public class D4scienceWPSClientSession {
     /**
      * Executes a process at a WPS
      *
-     * @param serverID url of server not the entry additionally defined in the
-     * caps.
-     * @param executeDoc Execute document
-     * @param rawData indicates whether a output should be requested as raw data
-     * (works only if just one output is requested)
+     * @param url url of server not the entry additionally defined in the caps.
+     * @param execute Execute document
      * @return either an ExecuteResponseDocument or an InputStream if asked for
      * RawData or an Exception Report
      */
-    private Object execute(String serverID, ExecuteDocument executeDoc, boolean rawData) throws WPSClientException {
-        CapabilitiesDocument caps = capabilitiesDocumentCache.get(serverID);
-        Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
-        String url = null;
-        for (Operation operation : operations) {
-            if (operation.getName().equals("Execute")) {
-                url = operation.getDCPArray()[0].getHTTP().getPostArray()[0].getHref();
-                break;
+    private Object execute(String serverID, ExecuteDocument execute, boolean rawData) throws WPSClientException {
+        String url = connectURL;
+        if (!useConnectURL) {
+            CapabilitiesDocument caps = loggedServices.get(serverID);
+            Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
+            for (Operation operation : operations) {
+                if (operation.getName().equals("Execute")) {
+                    url = operation.getDCPArray()[0].getHTTP().getPostArray()[0].getHref();
+                    break;
+                }
+            }
+            if (url == null) {
+                throw new WPSClientException(
+                        "Capabilities do not contain any information about the entry point for Execute operation.");
             }
         }
-        if (url == null) {
-            throw new WPSClientException("Caps does not contain any information about the entry point for process execution");
-        }
-        executeDoc.getExecute().setVersion(SUPPORTED_VERSION);
-        return retrieveExecuteResponseViaPOST(url, executeDoc, rawData);
+        execute.getExecute().setVersion(SUPPORTED_VERSION);
+        return retrieveExecuteResponseViaPOST(url, execute, rawData);
     }
 
     /**
      * Executes a process at a WPS
      *
-     * @param serverID url of server not the entry additionally defined in the
-     * caps.
-     * @param executeDoc Execute document
+     * @param serverID
+     * @param execute Execute document
      * @return either an ExecuteResponseDocument or an InputStream if asked for
      * RawData or an Exception Report
-     * @throws WPSClientException if an exception occurred during executeDoc
+     * @throws org.n52.wps.client.WPSClientException
      */
-    public Object execute(String serverID, ExecuteDocument executeDoc) throws WPSClientException {
-        ExecuteDocument.Execute exe = executeDoc.getExecute();
-        boolean setResponseForm = exe.isSetResponseForm();
-        ResponseFormType responseForm = exe.getResponseForm();
-        if (setResponseForm == true && responseForm.isSetRawDataOutput() == true) {
-            return execute(serverID, executeDoc, true);
+    public Object execute(String serverID, ExecuteDocument execute) throws WPSClientException {
+        if (execute.getExecute().isSetResponseForm() == true && execute.getExecute().isSetResponseForm() == true && execute.getExecute().getResponseForm().isSetRawDataOutput() == true) {
+            return execute(serverID, execute, true);
         } else {
-            return execute(serverID, executeDoc, false);
+            return execute(serverID, execute, false);
         }
-
+        
     }
-
+    
     private CapabilitiesDocument retrieveCapsViaGET(String url) throws WPSClientException {
         ClientCapabiltiesRequest req = new ClientCapabiltiesRequest();
         url = req.getRequest(url);
+        url = addSecurityTocken(url);
+        LOGGER.debug("GET: " + url);
         try {
             URL urlObj = new URL(url);
             urlObj.getContent();
@@ -388,12 +391,13 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error occured while parsing XML", e);
         }
     }
-
+    
     private ProcessDescriptionsDocument retrieveDescriptionViaGET(List<String> processIDs, String url) throws WPSClientException {
-        D4scienceDescribeProcessRequest req = new D4scienceDescribeProcessRequest();
+        D4scienceClientDescribeProcessRequest req = new D4scienceClientDescribeProcessRequest();
         req.setIdentifier(processIDs);
         String requestURL = req.getRequest(url);
         requestURL = addSecurityTocken(requestURL);
+        LOGGER.debug("GET: " + requestURL);
         try {
             URL urlObj = new URL(requestURL);
             InputStream is = urlObj.openStream();
@@ -407,12 +411,14 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error occured while parsing ProcessDescription document", e);
         }
     }
-
+    
     private InputStream retrieveDataViaPOST(XmlObject obj, String urlString) throws WPSClientException {
         try {
             urlString = addSecurityTocken(urlString);
             URL url = new URL(urlString);
             URLConnection conn = url.openConnection();
+            LOGGER.debug("POST: " + urlString + " " + obj.toString());
+            
             conn.setRequestProperty("Accept-Encoding", "gzip");
             conn.setRequestProperty("Content-Type", "text/xml");
             conn.setDoOutput(true);
@@ -431,7 +437,7 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error while transmission", e);
         }
     }
-
+    
     private Document checkInputStream(InputStream is) throws WPSClientException {
         DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
         fac.setNamespaceAware(true);
@@ -455,7 +461,7 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error occured, parser is not correctly configured", e);
         }
     }
-
+    
     private Node getFirstElementNode(Node node) {
         if (node == null) {
             return null;
@@ -465,21 +471,18 @@ public class D4scienceWPSClientSession {
         } else {
             return getFirstElementNode(node.getNextSibling());
         }
-
+        
     }
 
     /**
      * either an ExecuteResponseDocument or an InputStream if asked for RawData
      * or an Exception Report
      *
-     * @param url the URL of the WPS server
-     * @param doc the <code>ExecuteDocument</code> that should be send to the
-     * server
-     * @param rawData indicates whether a output should be requested as raw data
-     * (works only if just one output is requested)
-     * @return either an ExecuteResponseDocument or an InputStream if asked for
-     * RawData or an Exception Report
-     * @throws WPSClientException if an exception occurred during execute
+     * @param url
+     * @param doc
+     * @param rawData
+     * @return
+     * @throws WPSClientException
      */
     private Object retrieveExecuteResponseViaPOST(String url, ExecuteDocument doc, boolean rawData) throws WPSClientException {
         InputStream is = retrieveDataViaPOST(doc, url);
@@ -499,7 +502,7 @@ public class D4scienceWPSClientSession {
             return erDoc;
         }
     }
-
+    
     public String[] getProcessNames(String url) throws IOException {
         ProcessDescriptionType[] processes = getProcessDescriptionsFromCache(url).getProcessDescriptions().getProcessDescriptionArray();
         String[] processNames = new String[processes.length];
@@ -516,14 +519,15 @@ public class D4scienceWPSClientSession {
      * @param executeAsGETString KVP Execute request
      * @return either an ExecuteResponseDocument or an InputStream if asked for
      * RawData or an Exception Report
-     * @throws WPSClientException if an exception occurred during execute
+     * @throws org.n52.wps.client.WPSClientException
      */
     public Object executeViaGET(String url, String executeAsGETString) throws WPSClientException {
         url = url + executeAsGETString;
         try {
+            url = addSecurityTocken(url);
             URL urlObj = new URL(url);
             InputStream is = urlObj.openStream();
-
+            
             if (executeAsGETString.toUpperCase().contains("RAWDATA")) {
                 return is;
             }
@@ -544,6 +548,34 @@ public class D4scienceWPSClientSession {
         } catch (IOException e) {
             throw new WPSClientException("Error occured while retrieving capabilities from url: " + url, e);
         }
+        
+    }
+    
+    private ProcessDescriptionsDocument getProcessDescriptionInBatches(String url, CapabilitiesDocument doc) throws WPSClientException {
+        ProcessBriefType[] processes = doc.getCapabilities().getProcessOfferings().getProcessArray();
+        List<String> processIDs = new ArrayList<>();
+        List<ProcessDescriptionType> processDescriptionsList = new ArrayList<>();
+        for (int i = 0; i < processes.length; i++) {
+            processIDs.add(processes[i].getIdentifier().getStringValue());
+            if (i > 0 && (i % 20) == 0) {
+                ProcessDescriptionsDocument.ProcessDescriptions processDescriptionsDoc = describeProcess(processIDs, url).getProcessDescriptions();
+                processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
+                processIDs = new ArrayList<>();
+            }
+        }
+        if (processDescriptionsList.size() < processes.length) {
+            ProcessDescriptionsDocument.ProcessDescriptions processDescriptionsDoc = describeProcess(processIDs, url).getProcessDescriptions();
+            processDescriptionsList.addAll(Arrays.asList(processDescriptionsDoc.getProcessDescriptionArray()));
+        }
+        ProcessDescriptionType[] processDescriptionsArray = new ProcessDescriptionTypeImpl[processDescriptionsList.size()];
+        for (int i = 0; i < processDescriptionsList.size(); i++) {
+            processDescriptionsArray[i] = processDescriptionsList.get(i);
+        }
+        
+        ProcessDescriptionsDocument processDescriptionsDocument = ProcessDescriptionsDocument.Factory.newInstance();
+        processDescriptionsDocument.addNewProcessDescriptions().setProcessDescriptionArray(processDescriptionsArray);
+        
+        return processDescriptionsDocument;
     }
 
     /**
@@ -558,7 +590,7 @@ public class D4scienceWPSClientSession {
         String query = url.getQuery();
         if (query != null && query.length() > 1) {
             Map<String, String> query_pairs = new LinkedHashMap<>();
-
+            
             String[] pairs = query.split("&");
             for (String pair : pairs) {
                 int idx = pair.indexOf("=");
@@ -568,7 +600,7 @@ public class D4scienceWPSClientSession {
         }
         return null;
     }
-
+    
     private String addSecurityTocken(String requestURL) {
         if (securityToken != null && !requestURL.contains(SECURITY_TOCKEN_NAME)) {
             if (requestURL.endsWith("&")) {
@@ -579,5 +611,4 @@ public class D4scienceWPSClientSession {
         }
         return requestURL;
     }
-
 }

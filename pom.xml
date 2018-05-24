@@ -9,8 +9,6 @@
     <version>0.0.1-incubating-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Gis Taverna project</name>
-        
-
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>	
@@ -22,7 +20,6 @@
         <t2.ui.api.version>1.5</t2.ui.api.version>
         <t2.ui.impl.version>1.5</t2.ui.impl.version>
         <t2.workbench.version>2.5.0</t2.workbench.version>
-        <maven.test.skip>true</maven.test.skip>
     </properties>
 
     <build>
@@ -86,6 +83,7 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
+        
     </dependencies>
 
     <repositories>

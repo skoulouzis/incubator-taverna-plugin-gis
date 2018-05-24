@@ -7,22 +7,22 @@ import org.n52.wps.client.WPSClientException;
 
 public class GisClientFactory {
 
-    private static GisClientFactory instance = null;
+    private static final GisClientFactory INSTANCE = null;
 
     private GisClientFactory() {
         // private constructor
     }
 
     public static GisClientFactory getInstance() {
-        if (instance == null) {
+        if (INSTANCE == null) {
             return new GisClientFactory();
         } else {
-            return instance;
+            return INSTANCE;
         }
 
     }
 
-    public IGisClient getGisClient(String serviceURL) throws WPSClientException, MalformedURLException, UnsupportedEncodingException {
+    public IGisClient getGisClient(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         return new GisClientNorthImpl(serviceURL);
     }
 

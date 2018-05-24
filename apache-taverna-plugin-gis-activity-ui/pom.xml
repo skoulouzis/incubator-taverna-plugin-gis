@@ -29,7 +29,8 @@
         <dependency>
             <groupId>net.sf.taverna.t2.ui-api</groupId>
             <artifactId>contextual-views-api</artifactId>
-            <version>${t2.ui.api.version}</version>
+            <version>1.5</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>net.sf.taverna.t2.ui-impl</groupId>
@@ -41,11 +42,12 @@
         <dependency>
             <groupId>net.sf.taverna.t2.taverna-workbench</groupId>
             <artifactId>workbench-dev</artifactId>
-            <version>2.5.0</version>
+            <version>${t2.workbench.version}</version>
+            <scope>test</scope>
 
             <exclusions>
 
-                <!-- Disable various activities that are not relevant to testing our 
+                <!--                Disable various activities that are not relevant to testing our 
                 example activity. If you want to re-enable for instance WSDL activity, remember 
                 to comment out the exclusion for both wsdl-activity-ui and wsdl-activity 
                 further down. -->
@@ -83,7 +85,7 @@
                     <artifactId>wsdl-activity-ui</artifactId>
                 </exclusion>
 
-                <!-- .. and the t2.activities counterparts -->
+                <!--.. and the t2.activities counterparts--> 
                 <exclusion>
                     <groupId>net.sf.taverna.t2.activities</groupId>
                     <artifactId>apiconsumer-activity</artifactId>
@@ -116,9 +118,9 @@
                     <groupId>net.sf.taverna.t2.activities</groupId>
                     <artifactId>wsdl-activity</artifactId>
                 </exclusion>
-                <!-- Perspectives pulling in too many dependencies -->
+                <!--Perspectives pulling in too many dependencies--> 
                 <exclusion>
-                    <!--  fails due to direct dependency to WSDL -->
+                    <!--fails due to direct dependency to WSDL--> 
                     <groupId>net.sf.taverna.t2.ui-exts</groupId>
                     <artifactId>perspective-biocatalogue</artifactId>
                 </exclusion>
@@ -127,7 +129,18 @@
                     <artifactId>perspective-myexperiment</artifactId>
                 </exclusion>
             </exclusions>
-            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

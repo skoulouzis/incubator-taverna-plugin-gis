@@ -1,9 +1,11 @@
 package org.apache.taverna.gis.ui.serviceprovider;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
@@ -23,10 +25,10 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
         super(new GisServiceProviderConfig("", new ArrayList<String>()));
     }
 
-    private static final URI providerId = URI
+    private static final URI PROVIDER_ID = URI
             .create("http://cs.man.ac.uk/2016/service-provider/apache-taverna2-plugin-gis");
 
-    private Logger logger = Logger.getLogger(AddGisServiceDialog.class);
+    private final Logger LOGGER = Logger.getLogger(AddGisServiceDialog.class);
 
     /**
      * Do the actual search for services. Return using the callBack parameter.
@@ -43,9 +45,9 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
 
         List<GisServiceDesc> results = new ArrayList<>();
 
+        IGisClient gisServiceClient;
         try {
-            IGisClient gisServiceClient = GisClientFactory.getInstance()
-                    .getGisClient(getConfiguration().getOgcServiceUri().toASCIIString());
+            gisServiceClient = GisClientFactory.getInstance().getGisClient(getConfiguration().getOgcServiceUri().toASCIIString());
 
             List<String> processIdentifiers = serviceProviderConfig.getProcessIdentifiers();
 
@@ -74,17 +76,16 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
                 // partialResults() can also be called several times from inside
                 // for-loop if the full search takes a long time
                 callBack.partialResults(results);
-
             }
 
-        } catch (Exception ex) {
+        } catch (UnsupportedEncodingException | MalformedURLException ex) {
             JOptionPane.showMessageDialog(null,
                     "Could not read the service definition from "
                     + serviceURI + ":\n" + ex,
                     "Could not add service service",
                     JOptionPane.ERROR_MESSAGE);
 
-            logger.error(
+            LOGGER.error(
                     "Failed to list GWS processes for service: "
                     + serviceURI, ex);
         }
@@ -111,16 +112,21 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
      */
     @Override
     public String getName() {
-        return "Geospatial Web Services";
+        return "OGC Web Processing Service";
     }
 
     @Override
     public String toString() {
-        return "Geospatial Web Services " + getConfiguration().getOgcServiceUri();
+        return "OGC Web Processing Service " + getConfiguration().getOgcServiceUri();
     }
 
+    /**
+     *
+     * @return
+     */
+    @Override
     public String getId() {
-        return providerId.toASCIIString();
+        return PROVIDER_ID.toASCIIString();
     }
 
     @Override
@@ -145,8 +151,9 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
 //
 //        List<GisServiceProviderConfig> myDefaultConfigs = new ArrayList<>();
 //
-////        myDefaultConfigs.add(new GisServiceProviderConfig("http://localhost:8080/wps/WebProcessingService",
-////                Arrays.asList("gs:StringConcatWPS")));
+//        myDefaultConfigs.add(new GisServiceProviderConfig("http://dataminer-prototypes.d4science.org/wps/WebProcessingService?",
+//                Arrays.asList("dataminer-prototypes.d4science.org")));
+//
 //        return myDefaultConfigs;
 //
 //    }

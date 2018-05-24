@@ -15,108 +15,111 @@ import org.apache.taverna.gis.client.IPortDataDescriptor;
 
 public class GisServiceDesc extends ServiceDescription<GisActivityConfigurationBean> {
 
-	// All fields are searchable in the Service palette,
-	// for instance try a search for exampleString:3
-	private URI ogcServiceUri;
-	private String processIdentifier;
-	private List<IPortDataDescriptor> inputPortDefinitions;
-	private List<IPortDataDescriptor> outputPortDefinitions;
+    // All fields are searchable in the Service palette,
+    // for instance try a search for exampleString:3
+    private URI ogcServiceUri;
+    private String processIdentifier;
+    private List<IPortDataDescriptor> inputPortDefinitions;
+    private List<IPortDataDescriptor> outputPortDefinitions;
 
-	/**
-	 * The subclass of Activity which should be instantiated when adding a
-	 * service for this description
-	 */
-	@Override
-	public Class<? extends Activity<GisActivityConfigurationBean>> getActivityClass() {
-		return GisActivity.class;
-	}
+    /**
+     * The subclass of Activity which should be instantiated when adding a
+     * service for this description
+     */
+    @Override
+    public Class<? extends Activity<GisActivityConfigurationBean>> getActivityClass() {
+        return GisActivity.class;
+    }
 
-	/**
-	 * The configuration bean which is to be used for configuring the
-	 * instantiated activity. Making this bean will typically require some of
-	 * the fields set on this service description, like an endpoint URL or
-	 * method name.
-	 * 
-	 */
-	@Override
-	public GisActivityConfigurationBean getActivityConfiguration() {
-		GisActivityConfigurationBean bean = new GisActivityConfigurationBean();
-		bean.setOgcServiceUri(ogcServiceUri);
-		bean.setProcessIdentifier(processIdentifier);
+    /**
+     * The configuration bean which is to be used for configuring the
+     * instantiated activity. Making this bean will typically require some of
+     * the fields set on this service description, like an endpoint URL or
+     * method name.
+     *
+     */
+    @Override
+    public GisActivityConfigurationBean getActivityConfiguration() {
+        GisActivityConfigurationBean bean = new GisActivityConfigurationBean();
+        bean.setOgcServiceUri(ogcServiceUri);
+        bean.setProcessIdentifier(processIdentifier);
 
-		bean.setInputPortDefinitions(inputPortDefinitions);
-		bean.setOutputPortDefinitions(outputPortDefinitions);
+        bean.setInputPortDefinitions(inputPortDefinitions);
+        bean.setOutputPortDefinitions(outputPortDefinitions);
 
-		return bean;
-	}
+        return bean;
+    }
 
-	/**
-	 * An icon to represent this service description in the service palette.
-	 */
-	@Override
-	public Icon getIcon() {
-		return GisServiceIcon.getIcon();
-	}
+    /**
+     * An icon to represent this service description in the service palette.
+     */
+    @Override
+    public Icon getIcon() {
+        return GisServiceIcon.getIcon();
+    }
 
-	/**
-	 * The display name that will be shown in service palette and will be used
-	 * as a template for processor name when added to workflow.
-	 */
-	@Override
-	public String getName() {
-		return processIdentifier;
-	}
+    /**
+     * The display name that will be shown in service palette and will be used
+     * as a template for processor name when added to workflow.
+     * @return 
+     */
+    @Override
+    public String getName() {
+        return processIdentifier;
+    }
 
-	/**
-	 * The path to this service description in the service palette. Folders will
-	 * be created for each element of the returned path.
-	 */
-	@Override
-	public List<String> getPath() {
-		// For deeper paths you may return several strings
-		return Arrays.asList("GIS", "WPS - " + getOgcServiceUri());
-	}
+    /**
+     * The path to this service description in the service palette. Folders will
+     * be created for each element of the returned path.
+     *
+     * @return
+     */
+    @Override
+    public List<String> getPath() {
+        // For deeper paths you may return several strings
+        return Arrays.asList("OGC", "WPS - " + getOgcServiceUri());
+    }
 
-	/**
-	 * Return a list of data values uniquely identifying this service
-	 * description (to avoid duplicates). Include only primary key like fields,
-	 * ie. ignore descriptions, icons, etc.
-	 */
-	@Override
-	protected List<? extends Object> getIdentifyingData() {
-		// FIXME: Use your fields instead of example fields
-		return Arrays.<Object>asList(ogcServiceUri, processIdentifier);
-	}
+    /**
+     * Return a list of data values uniquely identifying this service
+     * description (to avoid duplicates). Include only primary key like fields,
+     * ie. ignore descriptions, icons, etc.
+     */
+    @Override
+    protected List<? extends Object> getIdentifyingData() {
+        // FIXME: Use your fields instead of example fields
+        return Arrays.<Object>asList(ogcServiceUri, processIdentifier);
+    }
 
-	public URI getOgcServiceUri() {
-		return ogcServiceUri;
-	}
+    public URI getOgcServiceUri() {
+        return ogcServiceUri;
+    }
 
-	public void setOgcServiceUri(URI ogcServiceUri) {
-		this.ogcServiceUri = ogcServiceUri;
-	}
+    public void setOgcServiceUri(URI ogcServiceUri) {
+        this.ogcServiceUri = ogcServiceUri;
+    }
 
-	public String getProcessIdentifier() {
-		return processIdentifier;
-	}
+    public String getProcessIdentifier() {
+        return processIdentifier;
+    }
 
-	public void setProcessIdentifier(String processIdentifier) {
-		this.processIdentifier = processIdentifier;
-	}
+    public void setProcessIdentifier(String processIdentifier) {
+        this.processIdentifier = processIdentifier;
+    }
 
-	public List<IPortDataDescriptor> getInputPortDefinitions() {
-		return inputPortDefinitions;
-	}
+    public List<IPortDataDescriptor> getInputPortDefinitions() {
+        return inputPortDefinitions;
+    }
 
-	public void setInputPortDefinitions(List<IPortDataDescriptor> inputPortDefinitions) {
-		this.inputPortDefinitions = inputPortDefinitions;
-	}
+    public void setInputPortDefinitions(List<IPortDataDescriptor> inputPortDefinitions) {
+        this.inputPortDefinitions = inputPortDefinitions;
+    }
 
-	public List<IPortDataDescriptor> getOutputPortDefinitions() {
-		return outputPortDefinitions;
-	}
+    public List<IPortDataDescriptor> getOutputPortDefinitions() {
+        return outputPortDefinitions;
+    }
 
-	public void setOutputPortDefinitions(List<IPortDataDescriptor> outputPortDefinitions) {
-		this.outputPortDefinitions = outputPortDefinitions;
-	}
+    public void setOutputPortDefinitions(List<IPortDataDescriptor> outputPortDefinitions) {
+        this.outputPortDefinitions = outputPortDefinitions;
+    }
 }

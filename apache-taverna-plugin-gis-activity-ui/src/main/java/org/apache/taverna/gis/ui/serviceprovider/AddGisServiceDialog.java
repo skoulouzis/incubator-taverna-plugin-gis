@@ -18,6 +18,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -159,12 +160,24 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
                 String url = serviceLocationField.getText();
 
-                url = url.trim();
+                url = url.trim(); 
 
                 serviceLocationField.setText(url);
 
                 if (isValidURL(url)) {
-                    setProcessTableData(url);
+                    try {
+                        setProcessTableData(url);
+                    } catch (UnsupportedEncodingException ex) {
+                        logger.error(
+                                "Error for service: "
+                                + serviceLocationField.getText(), ex);
+//                        java.util.logging.Logger.getLogger(AddGisServiceDialog.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (MalformedURLException ex) {
+                        logger.error(
+                                "Error for service: "
+                                + serviceLocationField.getText(), ex);
+                        java.util.logging.Logger.getLogger(AddGisServiceDialog.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
         });
@@ -335,7 +348,7 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
     }
 
-    private void setProcessTableData(String serviceURL) {
+    private void setProcessTableData(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         DefaultTableModel model = (DefaultTableModel) processesTable.getModel();
 
         // discard existing rows
@@ -352,14 +365,16 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
 
     }
 
-    private List<ProcessTableRow> getServiceProcesses(String serviceURL) {
+    private List<ProcessTableRow> getServiceProcesses(String serviceURL) throws UnsupportedEncodingException, MalformedURLException {
         List<ProcessTableRow> result = new ArrayList<>();
-        List<String> servicesList = null;
-        try {
-            IGisClient gisClient = GisClientFactory.getInstance().getGisClient(serviceURL);
 
+        IGisClient gisClient = GisClientFactory.getInstance().getGisClient(serviceURL);
+
+        List<String> servicesList = null;
+
+        try {
             servicesList = gisClient.getProcessList();
-        } catch (WPSClientException | MalformedURLException | UnsupportedEncodingException ex) {
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(null,
                     "Could not read the service definition from "
                     + serviceLocationField.getText() + ":\n" + ex,
@@ -388,7 +403,6 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
     private void addPressed() {
         final String serviceURL = serviceLocationField.getText().trim();
         new Thread("Adding Service " + serviceURL) {
-            @Override
             public void run() {
                 try {
 
@@ -420,8 +434,8 @@ public abstract class AddGisServiceDialog extends HelpEnabledDialog {
             }
         ;
         }.start();
-//        addRegistry(serviceURL, getSelectedProcesses());
-        closeDialog();
+		
+		closeDialog();
 
     }
 

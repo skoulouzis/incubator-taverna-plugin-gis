@@ -27,53 +27,57 @@
     </parent>
     <artifactId>apache-taverna2-plugin-gis-client</artifactId>
     <name>Gis Taverna Client</name>
-    <properties>
-        <maven.test.skip>true</maven.test.skip>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.n52.wps</groupId>
             <artifactId>52n-wps-client-lib</artifactId>
             <version>3.6.2</version>
-            <type>jar</type>
         </dependency>
+        
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>apache-log4j-extras</artifactId>
             <version>1.2.17</version>
             <type>jar</type>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.12</version>
-            <scope>test</scope>
-        </dependency>
+        
+        <!--        We must manually have these dependencies. Otherwise we get from taverna 
+        WARN  (net.sf.taverna.raven.repository.impl.ArtifactImpl:85) - XML SAX 
+        error for .taverna-core-2.5.0/repository/org/n52/sensorweb/52n-ogc-schema/1.1.0/52n-ogc-schema-1.1.0.pom beacuse the files are empty-->
         <dependency>
             <groupId>org.n52.wps</groupId>
-            <artifactId>52n-wps-server</artifactId>
-            <version>3.6.2</version>
-            <scope>test</scope>
-            <type>jar</type>
+            <artifactId>52n-xml-wps-v100</artifactId>
+            <version>1.1.0</version>
         </dependency>
+        
+        
         <dependency>
-            <groupId>org.n52.wps</groupId>
-            <artifactId>52n-wps-io-geotools</artifactId>
-            <version>4.0.0-beta.3</version>
-            <scope>test</scope>
+            <groupId>org.n52.sensorweb</groupId>
+            <artifactId>52n-ogc-schema</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.n52.sensorweb</groupId>
+            <artifactId>52n-ogc-schema</artifactId>
+            <version>1.0.0</version>
+            <type>pom</type>
+        </dependency>
+        
+        
+                <dependency>
+            <groupId>org.n52.sensorweb</groupId>
+            <artifactId>52n-w3c-schema</artifactId>
+            <version>2.1.0</version>
+            <type>pom</type>
+        </dependency>
+        
+        
+       
+        <dependency>
+            <groupId>org.n52.sensorweb</groupId>
+            <artifactId>52n-xml-wps-v100</artifactId>
+            <version>2.5.0</version>
             <type>jar</type>
         </dependency>
     </dependencies>
