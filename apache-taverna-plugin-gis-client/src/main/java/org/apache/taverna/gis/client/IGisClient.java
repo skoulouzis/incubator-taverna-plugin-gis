@@ -56,22 +56,5 @@ public interface IGisClient {
 	
 	// TODO: The interface is specific to WPS services. It should be generic so that it can handle different 
 	// geospatial web services
-	
-	
-	/**
-	 * @param serviceURI - the URI of the GWS that will return the capabilities
-	 * @return 
-	 */
-	public String getServiceCapabilities(URI serviceURI);
-	
-	public List<String> getProcessList();
-	
-	public Map<String, Integer> getProcessInputPorts(String processID);
-	
-	public Map<String, Integer> getProcessOutputPorts(String processID);
-	
-	public List<IPortDataDescriptor> getTaverna2InputPorts(String processID);
-	
-	public List<IPortDataDescriptor> getTaverna2OutputPorts(String processID);
-	
+		
 }
