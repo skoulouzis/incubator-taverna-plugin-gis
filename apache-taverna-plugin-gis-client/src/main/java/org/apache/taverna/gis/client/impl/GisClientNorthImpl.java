@@ -28,6 +28,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.apache.taverna.gis.client.BBoxPortDataDescriptor;
@@ -92,8 +93,8 @@ public class GisClientNorthImpl implements IGisClient {
     }
 
     @Override
-    public HashMap<String, Integer> getProcessInputPorts(String processID) {
-        HashMap<String, Integer> inputPorts = new HashMap<>();
+    public Map<String, Integer> getProcessInputPorts(String processID) {
+        Map<String, Integer> inputPorts = new HashMap<>();
 
         ProcessDescriptionType processDescription = null;
 
@@ -130,8 +131,8 @@ public class GisClientNorthImpl implements IGisClient {
     }
 
     @Override
-    public HashMap<String, Integer> getProcessOutputPorts(String processID) {
-        HashMap<String, Integer> outputPorts = new HashMap<>();
+    public Map<String, Integer> getProcessOutputPorts(String processID) {
+        Map<String, Integer> outputPorts = new HashMap<>();
 
         ProcessDescriptionType processDescription = null;
 
@@ -239,12 +240,12 @@ public class GisClientNorthImpl implements IGisClient {
 	 * @see org.apache.taverna.gis.client.IGisClient#executeProcess(java.lang.String, java.util.HashMap, java.util.HashMap)
      */
     @Override
-    public HashMap<String, String> executeProcess(String processID,
-            HashMap<String, IPortDataDescriptor> inputs, HashMap<String, IPortDataDescriptor> outputs)
+    public Map<String, String> executeProcess(String processID,
+            Map<String, IPortDataDescriptor> inputs, Map<String, IPortDataDescriptor> outputs)
             throws Exception {
 
         // The execution will return a map of port names and port values
-        HashMap<String, String> executeOutput;
+        Map<String, String> executeOutput;
         ProcessDescriptionType processDescription = null;
 
         // Get process description
@@ -282,10 +283,10 @@ public class GisClientNorthImpl implements IGisClient {
         return executeOutput;
     }
 
-    private HashMap<String, String> getResponseOutput(ProcessDescriptionType processDescription,
+    private Map<String, String> getResponseOutput(ProcessDescriptionType processDescription,
             ExecuteDocument execute, Object responseObject) throws Exception {
 
-        HashMap<String, String> executeOutput = new HashMap<>();
+        Map<String, String> executeOutput = new HashMap<>();
 
         if (responseObject instanceof ExecuteResponseDocument) {
             ExecuteResponseDocument response = (ExecuteResponseDocument) responseObject;
@@ -387,7 +388,7 @@ public class GisClientNorthImpl implements IGisClient {
 
     }
 
-    private void prepareExecuteBuilderInput(String processID, HashMap<String, IPortDataDescriptor> inputs,
+    private void prepareExecuteBuilderInput(String processID, Map<String, IPortDataDescriptor> inputs,
             ProcessDescriptionType processDescription, ExecuteRequestBuilder executeBuilder)
             throws IOException, Exception {
 
@@ -455,7 +456,7 @@ public class GisClientNorthImpl implements IGisClient {
         } // End input loop
     }
 
-    private void prepareExecuteBuilderOutput(String processID, HashMap<String, IPortDataDescriptor> outputs,
+    private void prepareExecuteBuilderOutput(String processID, Map<String, IPortDataDescriptor> outputs,
             ProcessDescriptionType processDescription, ExecuteRequestBuilder executeBuilder)
             throws IOException, Exception {
 

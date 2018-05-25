@@ -94,13 +94,13 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
                             configBean.getOgcServiceUri().toString());
 
                     // Prepare inputs
-                    HashMap<String, IPortDataDescriptor> serviceInputs = prepareInputs(inputs, context, referenceService);
+                    Map<String, IPortDataDescriptor> serviceInputs = prepareInputs(inputs, context, referenceService);
 
                     // Prepare outputs
-                    HashMap<String, IPortDataDescriptor> serviceOutputs = prepareOutputs(inputs, context, referenceService);
+                    Map<String, IPortDataDescriptor> serviceOutputs = prepareOutputs(inputs, context, referenceService);
 
                     // Execute process
-                    HashMap<String, String> serviceOutput = gisClient.executeProcess(configBean.getProcessIdentifier(), serviceInputs, serviceOutputs);
+                    Map<String, String> serviceOutput = gisClient.executeProcess(configBean.getProcessIdentifier(), serviceInputs, serviceOutputs);
 
                     // Retrieve output
                     outputs = retrieveResponseOutput(context, referenceService, serviceOutput);
@@ -122,7 +122,7 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
     }
 
     private Map<String, T2Reference> retrieveResponseOutput(InvocationContext context,
-            ReferenceService referenceService, HashMap<String, String> serviceOutput) {
+            ReferenceService referenceService, Map<String, String> serviceOutput) {
         Map<String, T2Reference> outputs;
         outputs = new HashMap<>();
         T2Reference simpleRef;
@@ -139,10 +139,10 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
     }
 
     // Checks if input ports have defined the execution output format
-    private HashMap<String, IPortDataDescriptor> prepareOutputs(final Map<String, T2Reference> inputs,
+    private Map<String, IPortDataDescriptor> prepareOutputs(final Map<String, T2Reference> inputs,
             InvocationContext context, ReferenceService referenceService) {
 
-        HashMap<String, IPortDataDescriptor> serviceOutputs = new HashMap<>();
+        Map<String, IPortDataDescriptor> serviceOutputs = new HashMap<>();
 
         for (IPortDataDescriptor activityOutputPort : configBean.getOutputPortDefinitions()) {
             if (activityOutputPort instanceof ComplexPortDataDescriptor) {
@@ -167,9 +167,9 @@ public class GisActivity extends AbstractAsynchronousActivity<GisActivityConfigu
         return serviceOutputs;
     }
 
-    private HashMap<String, IPortDataDescriptor> prepareInputs(final Map<String, T2Reference> inputs,
+    private Map<String, IPortDataDescriptor> prepareInputs(final Map<String, T2Reference> inputs,
             InvocationContext context, ReferenceService referenceService) {
-        HashMap<String, IPortDataDescriptor> serviceInputs = new HashMap<>();
+        Map<String, IPortDataDescriptor> serviceInputs = new HashMap<>();
 
         for (IPortDataDescriptor activityInputPort : configBean.getInputPortDefinitions()) {
             // Optional inputs are not stored in the map if no value is provided, hence they are skipped  
