@@ -42,6 +42,7 @@ import org.apache.taverna.gis.client.GisClientFactory;
 import org.apache.taverna.gis.client.IGisClient;
 
 import net.sf.taverna.t2.workbench.helper.HelpEnabledDialog;
+import org.n52.wps.client.WPSClientException;
 
 @SuppressWarnings("serial")
 public abstract class AddGisServiceDialog extends HelpEnabledDialog {
