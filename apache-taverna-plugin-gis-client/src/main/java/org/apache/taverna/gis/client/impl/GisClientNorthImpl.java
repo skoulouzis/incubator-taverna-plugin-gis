@@ -94,8 +94,8 @@ public class GisClientNorthImpl implements IGisClient {
     }
 
     @Override
-    public HashMap<String, Integer> getProcessInputPorts(String processID) {
-        HashMap<String, Integer> inputPorts = new HashMap<>();
+    public Map<String, Integer> getProcessInputPorts(String processID) {
+        Map<String, Integer> inputPorts = new HashMap<>();
 
         ProcessDescriptionType processDescription = null;
 
@@ -132,8 +132,8 @@ public class GisClientNorthImpl implements IGisClient {
     }
 
     @Override
-    public HashMap<String, Integer> getProcessOutputPorts(String processID) {
-        HashMap<String, Integer> outputPorts = new HashMap<>();
+    public Map<String, Integer> getProcessOutputPorts(String processID) {
+        Map<String, Integer> outputPorts = new HashMap<>();
 
         ProcessDescriptionType processDescription = null;
 
