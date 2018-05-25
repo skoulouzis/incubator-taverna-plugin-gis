@@ -1,11 +1,12 @@
 This project implements a gis plugin to add the support of geospatial services to Taverna 2.5
 
-Install:
+Install
+
 git clone -b taverna2 https://github.com/skoulouzis/incubator-taverna-plugin-gis.git
 cd incubator-taverna-plugin-gis 
 mvn install 
 
-Add to ~/.taverna-core-2.5.0/plugins/plugins.xml above the  </plugins:plugins> line :
+In the ~/.taverna-core-2.5.0/plugins/plugins.xml file above the </plugins:plugins> line add :
 
 ```XML
  <plugin>
