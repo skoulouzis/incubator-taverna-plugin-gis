@@ -53,8 +53,5 @@ public interface IGisClient {
      */
     public Map<String, String> executeProcess(String processID, Map<String, IPortDataDescriptor> inputs,
             Map<String, IPortDataDescriptor> outputs) throws Exception;
-	
-	// TODO: The interface is specific to WPS services. It should be generic so that it can handle different 
-	// geospatial web services
-		
+
 }

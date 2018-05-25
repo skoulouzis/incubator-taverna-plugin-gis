@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.apache.taverna.gis.client.BBoxPortDataDescriptor;
@@ -482,6 +481,11 @@ public class GisClientNorthImpl implements IGisClient {
                 }
             }
         }
+    }
+
+    public String getProcessDescription(String processID) throws IOException {
+        ProcessDescriptionType processDescription = wpsClient.getProcessDescription(serviceURI.toString(), processID);
+        return processDescription.getProcessVersion();
     }
 
 }
