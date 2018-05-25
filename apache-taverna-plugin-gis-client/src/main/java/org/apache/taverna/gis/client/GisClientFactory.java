@@ -3,6 +3,7 @@ package org.apache.taverna.gis.client;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import org.apache.taverna.gis.client.impl.GisClientNorthImpl;
+import org.n52.wps.client.WPSClientException;
 
 public class GisClientFactory {
 
