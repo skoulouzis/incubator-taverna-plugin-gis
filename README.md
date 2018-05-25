@@ -1,7 +1,7 @@
 This project implements a gis plugin to add the support of geospatial services to Taverna 2.5
 
 Install:
-git clone -b taverna2_dev2 https://github.com/skoulouzis/incubator-taverna-plugin-gis.git
+git clone -b taverna2 https://github.com/skoulouzis/incubator-taverna-plugin-gis.git
 cd incubator-taverna-plugin-gis 
 mvn install 
 
