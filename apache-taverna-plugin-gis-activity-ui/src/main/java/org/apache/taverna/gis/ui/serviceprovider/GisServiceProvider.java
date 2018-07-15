@@ -1,5 +1,6 @@
 package org.apache.taverna.gis.ui.serviceprovider;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -16,6 +17,7 @@ import org.apache.taverna.gis.client.*;
 import net.sf.taverna.t2.servicedescriptions.AbstractConfigurableServiceProvider;
 import net.sf.taverna.t2.servicedescriptions.ConfigurableServiceProvider;
 import net.sf.taverna.t2.servicedescriptions.CustomizedConfigurePanelProvider;
+import org.apache.taverna.gis.client.impl.GisClientNorthImpl;
 
 public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisServiceProviderConfig>
         implements ConfigurableServiceProvider<GisServiceProviderConfig>,
@@ -59,7 +61,11 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
                 service.setProcessIdentifier(processID);
 
                 // TODO: Optional: set description (Set a better description)
-                service.setDescription(processID);
+                if (gisServiceClient instanceof GisClientNorthImpl) {
+                    service.setDescription(((GisClientNorthImpl) gisServiceClient).getProcessDescription(processID));
+                } else {
+                    service.setDescription(processID);
+                }
 
                 // Get input ports
                 List<IPortDataDescriptor> inputList = gisServiceClient.getTaverna2InputPorts(processID);
@@ -88,6 +94,8 @@ public class GisServiceProvider extends AbstractConfigurableServiceProvider<GisS
             LOGGER.error(
                     "Failed to list GWS processes for service: "
                     + serviceURI, ex);
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(GisServiceProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         // No more results will be coming
