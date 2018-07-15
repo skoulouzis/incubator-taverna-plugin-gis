@@ -3,7 +3,7 @@ This project implements a gis plugin to add the support of geospatial services t
 ## Install
 
 ```
-git clone -b taverna2 https://github.com/skoulouzis/incubator-taverna-plugin-gis.git
+git clone -b taverna2_dev3 https://github.com/skoulouzis/incubator-taverna-plugin-gis.git
 ```
 ```
 cd incubator-taverna-plugin-gis 

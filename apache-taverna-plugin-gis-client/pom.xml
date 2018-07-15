@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.n52.wps</groupId>
             <artifactId>52n-wps-client-lib</artifactId>
-            <version>3.6.2</version>
+            <version>4.0.0-beta.5</version>
         </dependency>
         
         <dependency>
@@ -44,7 +44,7 @@
         <!--        We must manually have these dependencies. Otherwise we get from taverna 
         WARN  (net.sf.taverna.raven.repository.impl.ArtifactImpl:85) - XML SAX 
         error for .taverna-core-2.5.0/repository/org/n52/sensorweb/52n-ogc-schema/1.1.0/52n-ogc-schema-1.1.0.pom beacuse the files are empty-->
-        <dependency>
+<!--        <dependency>
             <groupId>org.n52.wps</groupId>
             <artifactId>52n-xml-wps-v100</artifactId>
             <version>1.1.0</version>
@@ -56,6 +56,7 @@
             <groupId>org.n52.sensorweb</groupId>
             <artifactId>52n-ogc-schema</artifactId>
             <version>1.1.0</version>
+            <type>pom</type>
         </dependency>
         
         <dependency>
@@ -71,7 +72,20 @@
             <artifactId>52n-w3c-schema</artifactId>
             <version>2.1.0</version>
         </dependency>
+       
+        <dependency>
+            <groupId>org.n52.sensorweb</groupId>
+            <artifactId>52n-xml-wps-v100</artifactId>
+            <version>2.5.0</version>
+            <type>jar</type>
+        </dependency>-->
         
-        
+        <!--XML SAX error for /.taverna-core-2.5.0/repository/javax/xml/jsr173/1.0/jsr173-1.0.pom org.xml.sax.SAXParseException; Premature end of file.-->
+        <dependency>
+            <groupId>javax.xml</groupId>
+            <artifactId>jsr173</artifactId>
+            <version>1.0</version>
+            <type>pom</type>
+        </dependency>
     </dependencies>
 </project>
