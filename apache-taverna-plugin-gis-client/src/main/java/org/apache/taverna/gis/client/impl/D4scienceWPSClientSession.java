@@ -64,11 +64,11 @@ import org.n52.wps.client.WPSClientException;
  * @author foerster
  */
 public class D4scienceWPSClientSession {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(D4scienceWPSClientSession.class);
     private static final String OGC_OWS_URI = "http://www.opengeospatial.net/ows";
     private static final String SUPPORTED_VERSION = "1.0.0";
-    
+
     private static D4scienceWPSClientSession session;
     private final Map<String, CapabilitiesDocument> loggedServices;
     private XmlOptions options = null;
@@ -149,7 +149,7 @@ public class D4scienceWPSClientSession {
                 securityToken = map.get(SECURITY_TOCKEN_NAME);
             }
         }
-        
+
         if (useConnectURL) {
             LOGGER.info("Use connect URL for further communication: " + connectURL);
         }
@@ -295,7 +295,7 @@ public class D4scienceWPSClientSession {
 //        String[] processIDs = new String[]{"all"};
 //        return describeProcess(processIDs, url);
         return getProcessDescriptionInBatches(url, doc);
-        
+
     }
 
     /**
@@ -312,7 +312,7 @@ public class D4scienceWPSClientSession {
         if (!useConnectURL) {
             CapabilitiesDocument caps = this.loggedServices.get(serverID);
             Operation[] operations = caps.getCapabilities().getOperationsMetadata().getOperationArray();
-            
+
             for (Operation operation : operations) {
                 if (operation.getName().equals("DescribeProcess")) {
                     url = operation.getDCPArray()[0].getHTTP().getGetArray()[0].getHref();
@@ -369,9 +369,9 @@ public class D4scienceWPSClientSession {
         } else {
             return execute(serverID, execute, false);
         }
-        
+
     }
-    
+
     private CapabilitiesDocument retrieveCapsViaGET(String url) throws WPSClientException {
         ClientCapabiltiesRequest req = new ClientCapabiltiesRequest();
         url = req.getRequest(url);
@@ -391,7 +391,7 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error occured while parsing XML", e);
         }
     }
-    
+
     private ProcessDescriptionsDocument retrieveDescriptionViaGET(List<String> processIDs, String url) throws WPSClientException {
         D4scienceClientDescribeProcessRequest req = new D4scienceClientDescribeProcessRequest();
         req.setIdentifier(processIDs);
@@ -411,14 +411,14 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error occured while parsing ProcessDescription document", e);
         }
     }
-    
+
     private InputStream retrieveDataViaPOST(XmlObject obj, String urlString) throws WPSClientException {
         try {
             urlString = addSecurityTocken(urlString);
             URL url = new URL(urlString);
             URLConnection conn = url.openConnection();
             LOGGER.debug("POST: " + urlString + " " + obj.toString());
-            
+
             conn.setRequestProperty("Accept-Encoding", "gzip");
             conn.setRequestProperty("Content-Type", "text/xml");
             conn.setDoOutput(true);
@@ -437,7 +437,7 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error while transmission", e);
         }
     }
-    
+
     private Document checkInputStream(InputStream is) throws WPSClientException {
         DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
         fac.setNamespaceAware(true);
@@ -461,7 +461,7 @@ public class D4scienceWPSClientSession {
             throw new WPSClientException("Error occured, parser is not correctly configured", e);
         }
     }
-    
+
     private Node getFirstElementNode(Node node) {
         if (node == null) {
             return null;
@@ -471,7 +471,7 @@ public class D4scienceWPSClientSession {
         } else {
             return getFirstElementNode(node.getNextSibling());
         }
-        
+
     }
 
     /**
@@ -502,7 +502,7 @@ public class D4scienceWPSClientSession {
             return erDoc;
         }
     }
-    
+
     public String[] getProcessNames(String url) throws IOException {
         ProcessDescriptionType[] processes = getProcessDescriptionsFromCache(url).getProcessDescriptions().getProcessDescriptionArray();
         String[] processNames = new String[processes.length];
@@ -527,7 +527,7 @@ public class D4scienceWPSClientSession {
             url = addSecurityTocken(url);
             URL urlObj = new URL(url);
             InputStream is = urlObj.openStream();
-            
+
             if (executeAsGETString.toUpperCase().contains("RAWDATA")) {
                 return is;
             }
@@ -548,9 +548,9 @@ public class D4scienceWPSClientSession {
         } catch (IOException e) {
             throw new WPSClientException("Error occured while retrieving capabilities from url: " + url, e);
         }
-        
+
     }
-    
+
     private ProcessDescriptionsDocument getProcessDescriptionInBatches(String url, CapabilitiesDocument doc) throws WPSClientException {
         ProcessBriefType[] processes = doc.getCapabilities().getProcessOfferings().getProcessArray();
         List<String> processIDs = new ArrayList<>();
@@ -571,10 +571,10 @@ public class D4scienceWPSClientSession {
         for (int i = 0; i < processDescriptionsList.size(); i++) {
             processDescriptionsArray[i] = processDescriptionsList.get(i);
         }
-        
+
         ProcessDescriptionsDocument processDescriptionsDocument = ProcessDescriptionsDocument.Factory.newInstance();
         processDescriptionsDocument.addNewProcessDescriptions().setProcessDescriptionArray(processDescriptionsArray);
-        
+
         return processDescriptionsDocument;
     }
 
@@ -590,17 +590,20 @@ public class D4scienceWPSClientSession {
         String query = url.getQuery();
         if (query != null && query.length() > 1) {
             Map<String, String> query_pairs = new LinkedHashMap<>();
-            
+
             String[] pairs = query.split("&");
             for (String pair : pairs) {
-                int idx = pair.indexOf("=");
-                query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+                if (pair.contains("=")) {
+                    int idx = pair.indexOf("=");
+                    query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+                }
+
             }
             return query_pairs;
         }
         return null;
     }
-    
+
     private String addSecurityTocken(String requestURL) {
         if (securityToken != null && !requestURL.contains(SECURITY_TOCKEN_NAME)) {
             if (requestURL.endsWith("&")) {

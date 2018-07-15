@@ -43,7 +43,7 @@
             <groupId>net.sf.taverna.t2.taverna-workbench</groupId>
             <artifactId>workbench-dev</artifactId>
             <version>${t2.workbench.version}</version>
-            <scope>test</scope>
+            <!--<scope>test</scope>-->
 
             <exclusions>
 

@@ -10,7 +10,7 @@
     <artifactId>apache-taverna2-plugin-gis-activity</artifactId>
     <name>Gis Taverna activity</name>
 
-    <repositories>
+<!--    <repositories>
         <repository>
             <id>n52-releases</id>
             <name>52n Releases</name>
@@ -22,7 +22,7 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-    </repositories>
+    </repositories>-->
 
     <dependencies>
         <dependency>
