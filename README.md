@@ -65,4 +65,11 @@ In the ~/.taverna-core-2.5.0/plugins/plugins.xml file above the </plugins:plugin
         </compatibility>
     </plugin>
 ```
+## Usage 
 
+Got to ``Import new services`` you should see the plug-in named ``OGC Web Processing Service``. 
+Clik on ``OGC Web Processing Service`` and in the window that comes up add the serice URL. 
+The URL has to be in the form of:
+```
+http://dataminer-prototypes.d4science.org/wps/WebProcessingService?gcube-token={TOKEN}&
+```
